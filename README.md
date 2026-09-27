@@ -10,41 +10,6 @@
 
 **AquaTrace** is an explainable decision-support platform designed to bridge the investigative gap between initial satellite detection of an ocean surface oil slick and actionable, auditable candidate vessel correlation.
 
-[![Deploy to GitHub Pages](https://github.com/codewithshriraj/AquaTrace/actions/workflows/deploy.yml/badge.svg)](https://github.com/codewithshriraj/AquaTrace/actions/workflows/deploy.yml)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-38bdf8?style=flat&logo=github)](https://codewithshriraj.github.io/AquaTrace/)
-[![Free Hosting](https://img.shields.io/badge/Hosting-100%25%20Free-10b981?style=flat)](https://codewithshriraj.github.io/AquaTrace/)
-
-🌐 **Live Web Application:** [https://codewithshriraj.github.io/AquaTrace/](https://codewithshriraj.github.io/AquaTrace/)
-
----
-
-## Free Hosting & Deployment Guide
-
-AquaTrace is configured for **100% free, zero-cost static cloud hosting** with automated CI/CD:
-
-### 1. GitHub Pages (Automated via GitHub Actions)
-The repository includes a production-ready GitHub Actions workflow ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)) that automatically builds and deploys AquaTrace on every push to `master`.
-
-To activate in your GitHub repository:
-1. Go to your repo **Settings** → **Pages** ([github.com/codewithshriraj/AquaTrace/settings/pages](https://github.com/codewithshriraj/AquaTrace/settings/pages)).
-2. Under **Build and deployment** → **Source**, select **GitHub Actions**.
-3. That's it! GitHub Actions will build and publish your site at:
-   👉 **`https://codewithshriraj.github.io/AquaTrace/`**
-
-### 2. Vercel (Free 1-Click Deploy)
-You can also deploy with zero config to Vercel for free:
-- Import `https://github.com/codewithshriraj/AquaTrace` into [Vercel](https://vercel.com/new).
-- Framework Preset: `Vite`
-- Build Command: `npm run build`
-- Output Directory: `dist`
-
-### 3. Netlify (Free 1-Click Deploy)
-- Import `https://github.com/codewithshriraj/AquaTrace` into [Netlify](https://app.netlify.com/start).
-- Build Command: `npm run build`
-- Publish Directory: `dist`
-
----
-
 Conventional approaches frequently commit the fundamental error of assuming that the vessel nearest to an observed slick at the time of satellite acquisition was the source of the discharge. In reality, ocean currents, surface winds, and Stokes drift transport and deform oil slicks over hours or days, displacing the observed surface anomaly tens of nautical miles from its actual point of origin.
 
 AquaTrace reconstructs the spill backwards in time using analytical and numerical hydrodynamic drift models, identifies candidate vessels transiting the modelled origin envelope during the estimated release window, validates candidate hypotheses via counterfactual forward simulation, and combines multi-channel evidence into an explainable **Composite Evidence Score** under strict human-in-the-loop oversight.
