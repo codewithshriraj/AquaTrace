@@ -195,8 +195,8 @@ BT
 0.2 0.255 0.333 rg
 39.6850393700787407 535.748267716535338 Td
 (On 2026-09-26 06:14:00 UTC, satellite radar observation \(EOS-04 \(RISAT-1A SAR\)\) detected an anomalous surface slick of) Tj
-T* (estimated area 8.4 km² \(estimated volume ~65 m³\) in the Gulf of Mannar / Palk Bay Shipping Channel. Reverse Lagrangian) Tj
-T* (hydrodynamic hindcasting driven by simulated metocean forcing \(currents: 0.45 kts @ 140°, winds: 7.5 kts @ 115°\) reconstructed) Tj
+T* (estimated area 6.4 km² \(estimated volume ~65 m³\) in the Gulf of Mannar / Palk Bay Shipping Channel. Reverse Lagrangian) Tj
+T* (hydrodynamic hindcasting driven by simulated metocean forcing \(currents: 0.45 kts @ 140°, winds: 4.1 kts @ 115°\) reconstructed) Tj
 T* (a release window between 18:00–00:00 UTC at centroid 8.92°N, 79.05°E.) Tj
 ET
 BT
@@ -205,7 +205,7 @@ BT
 0.2 0.255 0.333 rg
 39.6850393700787407 484.1577165354329964 Td
 (Evaluation of the candidate fleet yielded an INCONCLUSIVE verdict. Due to elevated biogenic look-alike likelihood \(48.2%) Tj
-T* (confidence\) under sub-threshold wind regimes \(7.5 kts\) and sparse regional AIS telemetry, the evidence is insufficient to attribute) Tj
+T* (confidence\) under sub-threshold wind regimes \(4.1 kts\) and sparse regional AIS telemetry, the evidence is insufficient to attribute) Tj
 T* (release to a specific commercial vessel without unacceptable false-positive risk. Mandatory evidence-based abstention is) Tj
 T* (enforced.) Tj
 ET
@@ -262,7 +262,7 @@ BT
 10.3499999999999996 TL
 0.059 0.09 0.165 rg
 223.9370078740157624 370.2049606299211746 Td
-(8.4 km²) Tj
+(6.4 km²) Tj
 ET
 BT
 /F1 9 Tf
@@ -397,14 +397,14 @@ BT
 10.3499999999999996 TL
 0.059 0.09 0.165 rg
 51.0236220472441033 94.3939370078740012 Td
-(6.8 km) Tj
+(5.6 km) Tj
 ET
 BT
 /F1 9 Tf
 10.3499999999999996 TL
 0.059 0.09 0.165 rg
 223.9370078740157624 94.3939370078740012 Td
-(1.2 km) Tj
+(1.1 km) Tj
 ET
 BT
 /F1 9 Tf
@@ -455,7 +455,7 @@ BT
 0.392 0.455 0.545 rg
 39.6850393700787407 779.5277952755905062 Td
 ( B o n n   A g r e e m e n t   A p p e a r a n c e   F o r m u l a t i o n :   V o l u m e   i s   e s t i m a t e d   e m p i r i c a l l y   b a s e d   o n   a p p e a r a n c e   s t a n d a r d   t h i c k n e s s   \( 2 8 . 3  ¼ m) Tj
-T* ( m e t a l l i c   s h e e n   c o n v e n t i o n \) :   V  "H   A r e a   \( 8 . 4   k m ² \)   ×   T h i c k n e s s   \( 2 8 . 3  ¼ m \)  "H   6 5   m ³ .   W e a t h e r i n g   s t a t e :   S h e e n   /   D i s p e r s e d   f i l m   w i t h) Tj
+T* ( m e t a l l i c   s h e e n   c o n v e n t i o n \) :   V  "H   A r e a   \( 6 . 4   k m ² \)   ×   T h i c k n e s s   \( 2 8 . 3  ¼ m \)  "H   6 5   m ³ .   W e a t h e r i n g   s t a t e :   S h e e n   /   D i s p e r s e d   f i l m   w i t h) Tj
 T* (sediment intermixing. Note: Demonstrative empirical estimate; not equivalent to direct laboratory volumetric measurement.) Tj
 ET
 BT
@@ -567,7 +567,7 @@ BT
 39.6850393700787407 534.4726771653542983 Td
 (• Governing Transport Equation: U_total = U_current + 0.033 × U_wind) Tj
 T* (• Surface Current Field \(U_curr\): 0.45 kts @ 140° \(parameterizing CMEMS advection\)) Tj
-T* (• Atmospheric Wind Field \(U_wind\): 7.5 kts @ 115° \(parameterizing ERA5 wind stress\)) Tj
+T* (• Atmospheric Wind Field \(U_wind\): 4.1 kts @ 115° \(parameterizing ERA5 wind stress\)) Tj
 T* ( •   W i n d   L e e w a y   F a c t o r   \(± \) :   3 . 3 %   s t a n d a r d   e m p i r i c a l   c o e f f i c i e n t) Tj
 T* (• Traceback Horizon: ~5.2 hours reverse advection to origin apex) Tj
 ET
@@ -1247,7 +1247,7 @@ BT
 8.625 TL
 0.392 0.455 0.545 rg
 51.0236220472441033 606.614409448818833 Td
-(AquaTrace Platform v2.4 • Report Generated: 2026-09-27T07:37:06.881Z) Tj
+(AquaTrace Platform v2.4 • Report Generated: 2026-09-27T09:29:10.978Z) Tj
 ET
 BT
 /F1 7.5 Tf
@@ -1435,7 +1435,7 @@ endobj
 25 0 obj
 <<
 /Producer (jsPDF 4.2.1)
-/CreationDate (D:20260927130706+05'30')
+/CreationDate (D:20260927145910+05'30')
 >>
 endobj
 26 0 obj
@@ -1480,7 +1480,7 @@ trailer
 /Size 27
 /Root 26 0 R
 /Info 25 0 R
-/ID [ <842DA0E7D493E29D4373D8E81A34B16B> <842DA0E7D493E29D4373D8E81A34B16B> ]
+/ID [ <788C2D0FEFFFC75B4862717EDCC13DD3> <788C2D0FEFFFC75B4862717EDCC13DD3> ]
 >>
 startxref
 35953

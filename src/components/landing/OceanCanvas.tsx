@@ -160,7 +160,7 @@ export const OceanCanvas: React.FC = () => {
       const slickCenterY = height * 0.54;
 
       ctx.save();
-      // Outer probability dispersion aura
+      // Outer uncertainty dispersion aura
       const slickGlow = ctx.createRadialGradient(slickCenterX, slickCenterY, 10, slickCenterX, slickCenterY, 140);
       slickGlow.addColorStop(0, 'rgba(217, 119, 6, 0.45)');
       slickGlow.addColorStop(0.5, 'rgba(234, 88, 12, 0.22)');

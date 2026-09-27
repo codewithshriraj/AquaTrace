@@ -18,7 +18,7 @@ export const defaultConfig: SystemConfig = {
 
 /**
  * Computes Composite Evidence Score based on multi-channel forensic evidence weighting.
- * Operational evidence weighting: S = sum(w_k * S_k), normalized so sum(w_k) = 1.0.
+ * Operational evidence weighting: S = sum(w_k * S_k), normalized so sum(w_k) = 1.00.
  * Notice: Operational evidence weighting; not statistically calibrated against empirical ground-truth base rates.
  */
 export function computeCompositeEvidenceScore(
@@ -37,10 +37,11 @@ export function computeCompositeEvidenceScore(
   return Math.min(96.5, Math.max(15.0, Math.round(weightedSum * 10) / 10));
 }
 
+// Backward-compatible alias for existing call sites
 export const computeCalibratedScore = computeCompositeEvidenceScore;
 
 /**
- * Classifies candidate correlation tier based on calibrated score and evidentiary sufficiency
+ * Classifies candidate correlation tier based on Composite Evidence Score and evidentiary sufficiency
  */
 export function classifyTier(
   score: number,

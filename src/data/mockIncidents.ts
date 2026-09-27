@@ -596,7 +596,7 @@ export const mockIncidents: Incident[] = [
     isSyntheticDemo: true,
     assignedInvestigator: 'Lt. Cdr. R. Iyer (ICG Regional Mandapam)',
     lastUpdatedUtc: '2026-09-26 06:18:22 UTC',
-    investigatorNotes: 'Radar backscatter damping (2.9 dB) lies inside natural biogenic sheen overlap. Terrestrial AIS receiver coverage gap of 145 min across Mandapam sector precludes track continuity. AquaTrace intentionally enforces INCONCLUSIVE status to prevent unsubstantiated allegations against coastal vessels.',
+    investigatorNotes: 'Radar backscatter damping (3.2 dB) and low wind (2.1 m/s) lie within natural biogenic sheen overlap. AIS receiver shadow zone across Mandapam sector with 145 min telemetry gap and weak candidate separation. AquaTrace intentionally enforces INCONCLUSIVE status to prevent unsubstantiated allegations against coastal vessels.',
     satelliteScene: {
       satellite: 'EOS-04 (RISAT-1A SAR)',
       sensor: 'C-band SAR FRS-1',
@@ -608,15 +608,15 @@ export const mockIncidents: Incident[] = [
       incidenceAngleDeg: 29.8,
     },
     slickProperties: {
-      areaKm2: 8.4,
-      perimeterKm: 19.2,
+      areaKm2: 6.4,
+      perimeterKm: 16.4,
       estimatedVolumeM3: 65.0,
       thicknessMicron: 7.7,
       estimatedAgeHours: '8 – 14 hrs (High uncertainty)',
       lookAlikeRisk: 'High',
       confidencePct: 48.2,
-      lengthKm: 6.8,
-      widthKm: 1.2,
+      lengthKm: 5.6,
+      widthKm: 1.1,
       orientationDeg: 145.0,
       weatheringState: 'Sheen / Dispersed film with sediment intermixing',
     },
@@ -681,7 +681,7 @@ export const mockIncidents: Incident[] = [
       { lat: 8.90, lng: 79.15, speedKnots: 0.52, directionDeg: 135 },
     ],
     windVectors: [
-      { lat: 8.85, lng: 79.10, speedKnots: 7.5, directionDeg: 115 },
+      { lat: 8.85, lng: 79.10, speedKnots: 4.1, directionDeg: 115 }, // ~2.1 m/s
     ],
     sensitiveAreas: [
       {
@@ -758,13 +758,13 @@ export const mockIncidents: Incident[] = [
       },
     ],
     darkVessels: [],
-    conclusionSummary: 'INCONCLUSIVE: Available radar contrast (damping ratio < 3.1 dB) and high turbidity index suggest high probability of biogenic algal slicks or sediment turbulence. Terrestrial AIS coverage gap of 2.4 hrs prevents reliable vessel track continuity. AquaTrace intentionally abstains from attribution.',
+    conclusionSummary: 'INCONCLUSIVE: Available radar contrast (damping ratio 3.2 dB) and high turbidity index suggest elevated likelihood of biogenic algal slicks or sediment turbulence. Terrestrial AIS coverage gap of 145 min prevents reliable vessel track continuity. AquaTrace intentionally abstains from attribution.',
     attributionStatus: 'INCONCLUSIVE',
     evidenceGaps: [
-      'Low radar contrast (damping ratio 2.9 dB is within biogenic natural sheen overlap zone).',
+      'Low radar contrast (damping ratio 3.2 dB is within biogenic natural sheen overlap zone).',
       'Optical cloud cover (88%) precluded Sentinel-2 multispectral chlorophyll index cross-validation.',
-      'Terrestrial AIS blackout period of 145 minutes between Rameswaram and Mandapam receivers.',
-      'Counterfactual simulation IoU is below defensible threshold (31% vs 75% required).',
+      'Terrestrial AIS shadow zone period of 145 minutes between coastal receivers.',
+      'Counterfactual simulation IoU is below operational threshold (31% vs 70% required).',
     ],
     recommendedActions: [
       'Deploy Indian Coast Guard interceptor boat (ICG Varaha) for physical water grab sampling.',
@@ -1639,9 +1639,9 @@ export const mockDataSources = [
   },
   {
     id: 'ais',
-    name: 'Global AIS Network (Terrestrial + Satellite Relay)',
+    name: 'AIS Telemetry Feeds (Terrestrial + Satellite Relay)',
     type: 'Vessel Identification & Kinematic Telemetry',
-    latency: 'Target: Near Real-Time (<30s stream)',
+    latency: 'Target: Streaming AIS feeds (<30s in production)',
     resolution: 'Vessel-level Class A/B Transponders',
     revisit: 'Dynamic (2s to 3 min pings)',
     status: 'OPERATIONAL',

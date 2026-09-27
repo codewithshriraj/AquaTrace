@@ -101,13 +101,13 @@ export const SettingsView: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div style={{ padding: '14px', backgroundColor: 'var(--bg-subtle)', borderRadius: '4px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '4px' }}>
-                MINIMUM SCORE FOR ATTRIBUTION
+                MINIMUM COMPOSITE SCORE FOR ATTRIBUTION
               </div>
               <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--accent-blue)', fontFamily: 'var(--font-mono)' }}>
-                {abstentionThreshold}%
+                {abstentionThreshold} / 100
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                Scores below this trigger automatic INCONCLUSIVE verdict.
+                Composite scores below this trigger automatic INCONCLUSIVE verdict.
               </div>
             </div>
 

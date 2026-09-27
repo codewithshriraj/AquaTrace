@@ -1,99 +1,123 @@
 import React from 'react';
-import { Leaf, DollarSign, Scale, CheckCircle } from 'lucide-react';
+import { Compass, Search, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export const ImpactSection: React.FC = () => {
   return (
     <div>
-      <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 40px auto' }}>
-        <span className="badge badge-teal" style={{ marginBottom: '8px' }}>NATIONAL & GLOBAL IMPACT</span>
+      <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 40px auto' }}>
+        <span className="badge badge-teal" style={{ marginBottom: '8px' }}>DECISION SUPPORT & OPERATIONAL VALUE</span>
         <h3 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>
-          Defensible Environmental Accountability at Sea
+          From Detection to Actionable Investigation
         </h3>
-        <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          Transforming maritime spill response from reactive shoreline clean-up into proactive satellite detection, forensic vessel attribution, and forensic-grade evidence chains.
+        <p style={{ fontSize: '16px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          AquaTrace is designed to reduce the analytical gap between:
         </p>
+        <div style={{ margin: '16px auto', display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '640px' }}>
+          <div style={{ padding: '12px 18px', backgroundColor: 'var(--bg-subtle)', borderLeft: '3px solid #94a3b8', textAlign: 'left', fontStyle: 'italic', color: 'var(--text-secondary)', fontSize: '14px' }}>
+            “A satellite detected something.”
+          </div>
+          <div style={{ padding: '12px 18px', backgroundColor: '#e0f2fe', borderLeft: '3px solid var(--accent-blue)', textAlign: 'left', fontWeight: 500, color: '#0369a1', fontSize: '14px' }}>
+            “Here is the evidence, uncertainty and vessel activity that an investigator should examine.”
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
         
-        {/* ENVIRONMENTAL */}
+        {/* OPERATIONAL SCREENING */}
         <div className="gis-panel" style={{ padding: '28px' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '6px', backgroundColor: 'var(--accent-teal-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-            <Leaf size={22} color="var(--accent-teal)" />
+            <Search size={22} color="var(--accent-teal)" />
           </div>
           <h4 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-            Environmental Protection
+            Targeted Vessel Screening
           </h4>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '20px' }}>
-            Protects fragile coastal ecosystems, coral reefs, and marine protected areas through rapid spill awareness and trajectory forecasting.
+            Helps maritime operational centres rapidly filter candidate vessels from hundreds of regional transits down to a ranked, manageable set.
           </p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
-              'Sub-hour detection prevents irreversible emulsification',
-              'Forward dispersion cones safeguard marine reserves (e.g. Malvan, Gulf of Mannar)',
-              'Discriminates between toxic hydrocarbon slicks and harmless biogenic sheens',
-              'Long-term ecosystem recovery monitoring with satellite revisit tracks'
+              'Faster spill investigation through automated spatiotemporal correlation',
+              'Targeted vessel screening prioritizing inspections by Port State Control',
+              'Maritime situational awareness across expansive Exclusive Economic Zones (EEZ)',
+              'Investigation prioritisation based on objective multi-factor scoring'
             ].map((pt, i) => (
               <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: 'var(--text-primary)' }}>
-                <CheckCircle size={15} color="var(--accent-teal)" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <CheckCircle2 size={15} color="var(--accent-teal)" style={{ marginTop: '2px', flexShrink: 0 }} />
                 <span>{pt}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* ECONOMIC */}
+        {/* RESPONSE & ENVIRONMENT */}
         <div className="gis-panel" style={{ padding: '28px' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '6px', backgroundColor: 'var(--accent-blue-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-            <DollarSign size={22} color="var(--accent-blue)" />
+            <Compass size={22} color="var(--accent-blue)" />
           </div>
           <h4 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-            Economic & Response Efficiency
+            Response & Environmental Planning
           </h4>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '20px' }}>
-            Eliminates thousands of flying hours for costly aerial maritime patrol aircraft by targeting reconnaissance missions with high-confidence geospatial coordinates.
+            Provides emergency response teams with forward trajectory projections and proximity assessments to sensitive coastal zones.
           </p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
-              '85% reduction in manual analyst correlation workload',
-              'Optimal vectoring of Coast Guard interceptor assets and boom deployers',
-              'Recover clean-up costs from offending shipowners under MARPOL Annex I',
-              'Protection of coastal tourism, fisheries livelihoods, and desalination intakes'
+              'Environmental response planning for coastal sanctuaries and fisheries',
+              'Forward trajectory forecasting with expanding uncertainty envelopes',
+              'Evidence organisation combining satellite, metocean and vessel data in one view',
+              'Contextual look-alike risk screening to prevent false alarms'
             ].map((pt, i) => (
               <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: 'var(--text-primary)' }}>
-                <CheckCircle size={15} color="var(--accent-blue)" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <CheckCircle2 size={15} color="var(--accent-blue)" style={{ marginTop: '2px', flexShrink: 0 }} />
                 <span>{pt}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* GOVERNANCE */}
+        {/* HUMAN-IN-THE-LOOP */}
         <div className="gis-panel" style={{ padding: '28px' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '6px', backgroundColor: 'var(--spill-amber-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-            <Scale size={22} color="var(--spill-amber)" />
+            <ShieldCheck size={22} color="var(--spill-amber)" />
           </div>
           <h4 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-            Governance & Maritime Law
+            Structured Decision Support
           </h4>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '20px' }}>
-            Provides sovereign maritime authorities with an auditable, operational forensic evidence chain that supports Port State Control enforcement.
+            Furnishes officers and analysts with transparent, auditable evidence chains while preserving critical human oversight.
           </p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
-              'Tamper-evident SHA-256 audit trail linking all data sources and ML models',
-              'Principled abstention (INCONCLUSIVE) avoids false diplomatic accusations',
-              'Port State Control (PSC) pre-arrival enforcement and targeted OWS inspections',
-              'Full compliance with UNCLOS Article 194 & MARPOL 73/78 discharge standards'
+              'Structured human-in-the-loop decision support for maritime officers',
+              'Acyclic evidentiary provenance graph from satellite scene to finding',
+              'Principled abstention (INCONCLUSIVE) when evidence is insufficient',
+              'Exportable forensic briefing reports documenting all analytical assumptions'
             ].map((pt, i) => (
               <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: 'var(--text-primary)' }}>
-                <CheckCircle size={15} color="var(--spill-amber)" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <CheckCircle2 size={15} color="var(--spill-amber)" style={{ marginTop: '2px', flexShrink: 0 }} />
                 <span>{pt}</span>
               </li>
             ))}
           </ul>
         </div>
 
+      </div>
+
+      {/* Final Statement Banner */}
+      <div 
+        style={{ 
+          marginTop: '32px', 
+          padding: '16px 24px', 
+          backgroundColor: '#f8fafc', 
+          borderRadius: '6px', 
+          border: '1px solid var(--border-strong)',
+          textAlign: 'center',
+          fontSize: '13px',
+          color: 'var(--text-secondary)'
+        }}
+      >
+        <strong>Notice:</strong> AquaTrace is decision-support software. It does not autonomously determine legal responsibility or enforcement action.
       </div>
     </div>
   );

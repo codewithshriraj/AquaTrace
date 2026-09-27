@@ -32,110 +32,110 @@ export const WorkflowExplorer: React.FC = () => {
     {
       step: '01',
       name: 'DETECT',
-      tagline: 'Multi-Sensor Satellite Oil Slick Segmentation',
+      tagline: 'Candidate Slick Geometry Identification',
       icon: <Radar size={18} />,
-      description: 'Detects anomalous dark formations on open ocean water surfaces using high-resolution Synthetic Aperture Radar (Sentinel-1, EOS-04) invariant to cloud cover and solar illumination.',
-      technology: 'PyTorch, SegFormer-B4 MiT, Sentinel-1 C-SAR IW Mode, Zenodo SAR Dataset',
+      description: 'Identifies candidate slick geometry and anomalous dark formations on ocean water surfaces using high-resolution Synthetic Aperture Radar (Sentinel-1, EOS-04) invariant to cloud cover.',
+      technology: 'PyTorch SegFormer-B4 / U-Net (Architecture target; pre-vectorised in demonstration)',
       inputs: 'Raw GRDH SAR Amplitude Scenes (VV + VH Polarisation), 10m Resolution',
       outputs: 'Binary Slick Mask Polygon, GeoJSON, NRCS Backscatter Damping Map',
       formulaOrRule: 'Backscatter Damping: Δσ₀ = σ₀(Clean Ocean) - σ₀(Slick) > 4.5 dB',
-      sampleMetric: 'Detection Confidence: 93.6% | Look-Alike Risk: Low (0.08)',
+      sampleMetric: 'Detection Contrast: 8.4 dB | Look-Alike Risk: Low (0.08)',
     },
     {
       step: '02',
       name: 'CHARACTERISE',
-      tagline: 'Morphology, Age Estimation & Look-Alike Filtering',
+      tagline: 'Measurement, Weathering & Look-Alike Screening',
       icon: <Layers size={18} />,
-      description: 'Quantifies geometric thickness, surface area, weathering state, and filters out false positives such as biogenic algal films, wind shadow lees, internal waves, and coastal upwellings.',
-      technology: 'OpenCV, Shapely, GDAL, Sentinel-2 Multispectral Chlorophyll-a / NDWI',
+      description: 'Measures geometry, surface area, and weathering state while screening for look-alikes such as natural biogenic sheens, low-wind calm water, and sediment plumes.',
+      technology: 'Morphological Analysis, GDAL, Wind Wave Damping Thresholds',
       inputs: 'Detected polygon, wind velocity, sea surface temperature, bathymetry',
-      outputs: 'Estimated slick age (hours), volumetric estimate (m³), weathering state',
-      formulaOrRule: 'Fay Surface Tension / Viscous-Inertial Spreading Laws & Weathering Curves',
-      sampleMetric: 'Area: 14.85 km² | Thickness: 28.3 µm | Age: 4.5–6.0 hrs',
+      outputs: 'Estimated slick age (hours), volumetric estimate (~420 m³), weathering state',
+      formulaOrRule: 'Fay Viscous-Inertial Spreading Laws & Weathering Curves',
+      sampleMetric: 'Area: 14.85 km² | Thickness: 28.3 µm | Estimated Age: 4.5–6.0 hrs',
     },
     {
       step: '03',
       name: 'HINDCAST',
-      tagline: 'Ensemble Backward Drift Oceanographic Reconstruction',
+      tagline: 'Reconstructing Likely Origin Region & Time',
       icon: <RotateCcw size={18} />,
-      description: 'Reverses time through hydrodynamic and wind current fields to reconstruct the exact probabilistic spacetime distribution of where and when the release occurred.',
-      technology: 'OpenDrift, NOAA GNOME, ECMWF ERA5 10m Winds, CMEMS Global Ocean Currents',
+      description: 'Reconstructs the likely origin region and release-time window by reversing ocean current and wind advection under analytical and stochastic drift dynamics.',
+      technology: 'Production target: OpenDrift / NOAA GNOME; Demo: Lightweight analytical reverse advection',
       inputs: 'Slick polygon, ERA5 wind grid, CMEMS surface currents (U/V), wave Stokes drift',
-      outputs: '50%, 80%, and 95% spatial-temporal origin probability envelopes and release time window',
+      outputs: 'P50 / P80 / P95 modelled uncertainty envelopes and release-time window',
       formulaOrRule: 'dX_t = -(u_{curr} + α_{wind} · u_{wind} + u_{stokes})dt + √(2K_h)dW_t',
       sampleMetric: 'Release Window: 08:45–10:15 UTC (Centroid: 18.26°N, 70.92°E)',
     },
     {
       step: '04',
       name: 'FORECAST',
-      tagline: 'Predictive Forward Dispersion & Shoreline Impact',
+      tagline: 'Projecting Potential Dispersion & Shoreline Risk',
       icon: <TrendingUp size={18} />,
-      description: 'Forecasts the forward trajectory of the oil slick over the next 24–72 hours with expanding uncertainty envelopes to protect sensitive coastal habitats and aquaculture.',
-      technology: 'OpenOil Particle Dispersion, RK4 Integration, Bathymetric Shoal Model',
+      description: 'Projects potential forward dispersion and expanding uncertainty envelopes over the next 24–72 hours to assist coastal protection and boom deployment planning.',
+      technology: 'Production target: OpenOil Lagrangian dispersion; Demo: Forward trajectory simulation',
       inputs: 'Current slick position, forecasted meteorological winds & tidal streams',
-      outputs: 'T+6h, T+12h, T+24h trajectory cones, shoreline contact probabilities',
-      formulaOrRule: 'Advection-Diffusion with Evaporation & Emulsification Mass Balance',
+      outputs: 'T+6h, T+12h, T+24h trajectory cones, sensitive area proximity assessments',
+      formulaOrRule: 'Forward Advection-Diffusion Mass Balance with Evaporation & Emulsification',
       sampleMetric: 'T+24h Travel: 28.4 km @ 058° | Nearest Sanctuary CPA: 44.6 nm',
     },
     {
       step: '05',
       name: 'CORRELATE',
-      tagline: 'Spatiotemporal AIS Vessel Historical Reconstruction',
+      tagline: 'Searching Historical Vessel Telemetry',
       icon: <Radio size={18} />,
-      description: 'Queries global Class A and B AIS broadcast records within the reconstructed origin spacetime bounding box to isolate all commercial vessels transiting the spill apex.',
-      technology: 'DuckDB, PostGIS Spatial Indexing, MarineCadastre, Spire AIS Relay',
-      inputs: 'Origin polygon (P95), release window [T_start, T_end], vessel MMSI stream',
+      description: 'Searches historical vessel telemetry within the reconstructed origin spacetime bounding box to isolate candidate vessels transiting during the release window.',
+      technology: 'DuckDB / PostGIS Spatiotemporal Query Engine (Synthetic demo fleet)',
+      inputs: 'Modelled origin envelope (P95), release window [08:45, 10:15 UTC], AIS stream',
       outputs: 'Candidate vessel fleet, closest point of approach (CPA), speed profiles',
-      formulaOrRule: 'Spatial-Temporal Intersection: d_v(t) ∈ Polygon_{origin}(t) for t ∈ [T₀, T₁]',
-      sampleMetric: '4 Candidates Filtered from 142 Vessels in Sector',
+      formulaOrRule: 'Spatiotemporal Intersection: d_v(t) ∈ Polygon_{origin}(t) for t ∈ [T₀, T₁]',
+      sampleMetric: '3 Filtered Candidates from 48 Vessels in Sector',
     },
     {
       step: '06',
       name: 'INVESTIGATE',
-      tagline: 'Dark Vessel Forensics & Kinematic Anomaly Detection',
+      tagline: 'Analysing Kinematics & Continuity',
       icon: <Search size={18} />,
-      description: 'Detects vessels with non-reporting AIS (dark vessels) by cross-referencing SAR CFAR metallic ship targets against AIS broadcasts, and flags kinematic / continuity anomalies.',
-      technology: 'SAR CFAR (Constant False Alarm Rate), Kinematic Acceleration Filter',
-      inputs: 'SAR high-resolution backscatter peaks, AIS message timestamps and positions',
-      outputs: 'Unmatched radar targets, speed anomalies, unexplained deceleration logs',
-      formulaOrRule: 'Vessel Match: ||X_{SAR} - X_{AIS}(t_{SAR})|| < ε_{drift}; AIS Silence Flagged',
-      sampleMetric: '1 Dark Vessel (Small Trawler) + 1 Speed Drop Anomaly (8.4 kts)',
+      description: 'Analyses vessel kinematics, speed profile anomalies, course alterations, and flags AIS gaps or discrepancies against radar metallic targets.',
+      technology: 'Kinematic Acceleration Filters & SAR Target Cross-Matching',
+      inputs: 'Vessel broadcast records, reported speed over ground, SAR radar detections',
+      outputs: 'Kinematic / AIS continuity anomalies, speed drop logs, track deviation alerts',
+      formulaOrRule: 'Kinematic Plausibility: ||a_v(t)|| < a_{max}; AIS continuity checks flagged',
+      sampleMetric: '1 Candidate Speed Drop: 14.2 → 8.4 kts (42 min duration)',
     },
     {
       step: '07',
       name: 'VERIFY',
-      tagline: 'Counterfactual Vessel Discharge Simulation',
+      tagline: 'Candidate Counterfactual Comparison',
       icon: <CheckCircle2 size={18} />,
-      description: 'Injects virtual discharge particles at each candidate vessel’s exact coordinates and timestamp, runs forward hydrodynamic dispersion, and computes geometric similarity against observed SAR slick.',
-      technology: 'Lagrangian Particle Tracking, Geometric Intersection over Union (IoU)',
-      inputs: 'Candidate vessel GPS track, discharge volume hypothesis, metocean fields',
-      outputs: 'Simulated slick footprint, Hausdorff distance, spatial IoU similarity score',
+      description: 'Runs candidate counterfactual comparison: simulates hypothetical discharge from candidate tracks forward to test whether it reproduces the observed SAR slick footprint.',
+      technology: 'Lagrangian Particle Tracking & Spatial IoU / Hausdorff Distance Evaluation',
+      inputs: 'Candidate vessel trajectory, hypothetical discharge volume, metocean fields',
+      outputs: 'Simulated slick footprint, spatial IoU, Hausdorff distance, shape similarity',
       formulaOrRule: 'IoU = Area(S_{observed} ∩ S_{simulated}) / Area(S_{observed} ∪ S_{simulated})',
-      sampleMetric: 'Candidate A IoU: 84.2% (Overall Similarity 91.4%)',
+      sampleMetric: 'Candidate A IoU: 84.2% | Hausdorff: 1.15 km | Shape Similarity: 91.4%',
     },
     {
       step: '08',
       name: 'ATTRIBUTE',
-      tagline: 'Multi-Channel Forensic Evidence Fusion',
+      tagline: 'Combining Evidence with Transparent Weighting',
       icon: <Award size={18} />,
-      description: 'Combines satellite radar contrast, drift hindcast convergence, AIS spacetime proximity, vessel behaviour, and counterfactual validation into an auditable composite evidence score.',
-      technology: 'Multi-Factor Evidence Network, Operational Weighted Scoring, Audit Trail',
-      inputs: 'Vector of multi-modal evidence scores [S_sat, S_drift, S_ais, S_behav, S_cf, S_hist]',
-      outputs: 'Ranked candidate list: High, Moderate, Low Correlation or Inconclusive',
-      formulaOrRule: 'Score = Σ (w_k · S_k) | w_k: Sat 20%, Drift 25%, AIS 20%, Behav 10%, CF 20%, Hist 5%',
-      sampleMetric: 'Rank #1: MT AL-HIKMA — 89.9% (HIGH CORRELATION)',
+      description: 'Combines multiple independent evidence channels into an auditable composite score using transparent operational weighting to rank candidate vessels.',
+      technology: 'Multi-Channel Evidence Fusion & Operational Weighting Engine',
+      inputs: 'Six evidence scores: Satellite (20%), Drift (25%), AIS (20%), Behaviour (10%), CF (20%), History (5%)',
+      outputs: 'Ranked candidate list with Composite Evidence Scores; High/Moderate/Low tiering',
+      formulaOrRule: 'Score = Σ (w_k · S_k) | Weights: Sat 0.20, Drift 0.25, AIS 0.20, Behav 0.10, CF 0.20, Hist 0.05',
+      sampleMetric: 'Top-Ranked Candidate: MT AL-HIKMA — 89.9 / 100 (HIGH CORRELATION)',
     },
     {
       step: '09',
       name: 'ABSTAIN',
-      tagline: 'Rigorous Abstention: INCONCLUSIVE When Evidence Is Weak',
+      tagline: 'Principled Abstention: Return INCONCLUSIVE When Weak',
       icon: <AlertOctagon size={18} />,
-      description: 'AquaTrace never forces a false allegation. If look-alike risk is high, AIS coverage is missing, or counterfactual IoU is below 70%, the system flags the case as INCONCLUSIVE.',
-      technology: 'Uncertainty Quantifier, Evidence Sufficiency Governor',
-      inputs: 'Confidence margins, data coverage completeness, model variance',
-      outputs: 'Formal INCONCLUSIVE verdict with itemised evidentiary gaps and field sampling actions',
-      formulaOrRule: 'If P(Top_1) - P(Top_2) < Threshold OR LookAlike > 0.40 => ABSTAIN',
-      sampleMetric: 'Incident OS-037: INCONCLUSIVE (High Biogenic Look-Alike Risk)',
+      description: 'Returns INCONCLUSIVE when evidence is insufficient, look-alike risk is high, or candidate separation is ambiguous, preventing unverified allegations.',
+      technology: 'Evidentiary Sufficiency Governor & Abstention Logic',
+      inputs: 'Look-alike risk index, telemetry completeness, counterfactual IoU margin',
+      outputs: 'Formal INCONCLUSIVE verdict with itemised evidentiary gaps and field sampling advisory',
+      formulaOrRule: 'If LookAlikeRisk > Cutoff OR TopScore < Threshold OR IoU < 0.70 => ABSTAIN',
+      sampleMetric: 'Incident OS-037: INCONCLUSIVE (High Look-Alike Risk, Weak AIS)',
     },
   ];
 
@@ -206,7 +206,7 @@ export const WorkflowExplorer: React.FC = () => {
               STAGE {current.step} OF 09
             </span>
             <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              FORENSIC PIPELINE
+              ANALYTICAL PIPELINE
             </span>
           </div>
 
@@ -221,7 +221,7 @@ export const WorkflowExplorer: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             <div style={{ padding: '12px', backgroundColor: 'var(--bg-subtle)', borderRadius: '4px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase' }}>
-                Technology & Frameworks
+                Method & Tools
               </div>
               <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>
                 {current.technology}
@@ -247,7 +247,7 @@ export const WorkflowExplorer: React.FC = () => {
               Next Step <ArrowRight size={14} />
             </button>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              Click any stage tab to inspect inputs, math & criteria
+              Click any stage tab to inspect inputs, formulation & criteria
             </span>
           </div>
         </div>
@@ -264,10 +264,10 @@ export const WorkflowExplorer: React.FC = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '10px' }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#38bdf8', letterSpacing: '0.05em' }}>
-              SCIENTIFIC FORMULATION // STAGE {current.step}
+              ANALYTICAL FORMULATION // STAGE {current.step}
             </span>
             <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-mono)' }}>
-              PEER-REVIEWED SPEC
+              ANALYTICAL METHOD
             </span>
           </div>
 
@@ -293,7 +293,7 @@ export const WorkflowExplorer: React.FC = () => {
 
           <div style={{ marginBottom: '18px' }}>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
-              Verified Production Output
+              DEMONSTRATION OUTPUT
             </div>
             <div style={{ fontSize: '13px', color: '#cbd5e1' }}>
               {current.outputs}
