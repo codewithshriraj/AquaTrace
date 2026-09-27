@@ -2,8 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { LandingPage } from './components/landing/LandingPage';
 import { ConsoleWorkspace } from './components/console/ConsoleWorkspace';
 
+function getNormalizedPath(): string {
+  // 1. Check hash routing first (e.g. #/console/...)
+  const hash = window.location.hash.replace(/^#/, '');
+  if (hash.startsWith('/console')) {
+    return hash;
+  }
+
+  // 2. Normalize pathname by stripping GitHub Pages repository subpath (e.g. /AquaTrace)
+  let path = window.location.pathname;
+  if (path.startsWith('/AquaTrace')) {
+    path = path.slice('/AquaTrace'.length);
+    if (!path.startsWith('/')) path = '/' + path;
+  }
+  return path || '/';
+}
+
+function getBasePrefix(): string {
+  return window.location.pathname.startsWith('/AquaTrace') ? '/AquaTrace' : '';
+}
+
 function parseUrlState() {
-  const path = window.location.pathname;
+  const path = getNormalizedPath();
   if (!path.startsWith('/console')) {
     return {
       route: 'landing' as const,
@@ -118,13 +138,19 @@ export function App() {
       setUrlState(parseUrlState());
     };
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
   }, []);
 
   const navigateToConsole = (incidentId?: string) => {
     const targetId = incidentId || 'OS-042';
-    const targetPath = incidentId ? `/console/incidents/${incidentId}` : '/console';
-    window.history.pushState({}, '', targetPath);
+    const targetSubpath = incidentId ? `/console/incidents/${incidentId}` : '/console';
+    const prefix = getBasePrefix();
+    const fullPath = `${prefix}${targetSubpath}`;
+    window.history.pushState({}, '', fullPath);
     setUrlState({
       route: 'console',
       navView: 'investigation-map',
@@ -134,7 +160,8 @@ export function App() {
   };
 
   const navigateToLanding = () => {
-    window.history.pushState({}, '', '/');
+    const prefix = getBasePrefix();
+    window.history.pushState({}, '', prefix ? `${prefix}/` : '/');
     setUrlState({
       route: 'landing',
       navView: 'investigation-map',
@@ -143,8 +170,10 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleNavigateRoute = (path: string) => {
-    window.history.pushState({}, '', path);
+  const handleNavigateRoute = (subpath: string) => {
+    const prefix = getBasePrefix();
+    const fullPath = `${prefix}${subpath}`;
+    window.history.pushState({}, '', fullPath);
     setUrlState(parseUrlState());
   };
 
