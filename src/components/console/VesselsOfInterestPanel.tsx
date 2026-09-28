@@ -102,7 +102,7 @@ export const VesselsOfInterestPanel: React.FC<VesselsOfInterestPanelProps> = ({
   const [isParamsOpen, setIsParamsOpen] = useState(false);
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
 
-  const selectedCandidate: CandidateVessel =
+  const selectedCandidate: CandidateVessel | undefined =
     incident.candidateVessels.find((c) => c.id === selectedCandidateId) ||
     incident.candidateVessels[0];
 
@@ -110,10 +110,11 @@ export const VesselsOfInterestPanel: React.FC<VesselsOfInterestPanelProps> = ({
 
   // Initialize or re-run baseline simulation whenever candidate changes
   useEffect(() => {
+    if (!selectedCandidate) return;
     const res = runForwardSimulation(selectedCandidate, incident, params);
     updateSimResult(res);
     updateFrameIndex(res.frames.length - 1);
-  }, [selectedCandidate.id, incident.id]);
+  }, [selectedCandidate?.id, incident.id]);
 
   // Clean up playback timer on unmount
   useEffect(() => {
@@ -124,6 +125,7 @@ export const VesselsOfInterestPanel: React.FC<VesselsOfInterestPanelProps> = ({
 
   // Run full dynamic in-silico simulation with live 4-phase progress
   const executeSimulation = (customP?: Partial<SimulationParams>) => {
+    if (!selectedCandidate) return;
     const activeP = { ...params, ...customP };
     setIsSimulating(true);
     setSimulationProgress(0);
@@ -322,6 +324,15 @@ export const VesselsOfInterestPanel: React.FC<VesselsOfInterestPanelProps> = ({
       {/* 2. TAB CONTENT: IN-SILICO COUNTERFACTUAL FORWARD SIMULATION */}
       {/* ======================================================== */}
       {activeTab === 'counterfactual' && (
+        !selectedCandidate || incident.candidateVessels.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', backgroundColor: 'var(--bg-subtle)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <Ship size={36} color="var(--text-muted)" style={{ margin: '0 auto 12px auto' }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>No Candidate Vessels Correlated</h4>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '440px', margin: '6px auto 0 auto' }}>
+              This incident is undergoing initial screening or no vessel transited the reconstructed release envelope within the temporal window.
+            </p>
+          </div>
+        ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
           {/* CANDIDATE VESSEL SELECTOR PILLS */}
@@ -781,6 +792,7 @@ export const VesselsOfInterestPanel: React.FC<VesselsOfInterestPanelProps> = ({
             )}
           </div>
         </div>
+        )
       )}
 
       {/* ======================================================== */}
@@ -880,26 +892,28 @@ export const VesselsOfInterestPanel: React.FC<VesselsOfInterestPanelProps> = ({
           </div>
 
           {/* Quick Highlight of Selected Vessel */}
-          <div style={{ backgroundColor: 'var(--bg-subtle)', borderRadius: '6px', border: '1px solid var(--border)', padding: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Ship size={16} color="var(--accent-blue)" />
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  Selected Vessel of Interest: {selectedCandidate.name} ({selectedCandidate.flag})
-                </span>
+          {selectedCandidate && (
+            <div style={{ backgroundColor: 'var(--bg-subtle)', borderRadius: '6px', border: '1px solid var(--border)', padding: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Ship size={16} color="var(--accent-blue)" />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Selected Vessel of Interest: {selectedCandidate.name} ({selectedCandidate.flag})
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveTab('counterfactual')}
+                  className="btn btn-primary btn-sm"
+                  style={{ fontSize: '11px', padding: '3px 8px' }}
+                >
+                  Launch Forward Simulation <ArrowRight size={12} />
+                </button>
               </div>
-              <button
-                onClick={() => setActiveTab('counterfactual')}
-                className="btn btn-primary btn-sm"
-                style={{ fontSize: '11px', padding: '3px 8px' }}
-              >
-                Launch Forward Simulation <ArrowRight size={12} />
-              </button>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                CPA: <strong>{selectedCandidate.closestPointOfApproachNm} nm</strong> at <strong>{selectedCandidate.cpaTimeUtc}</strong> • Destination: <strong>{selectedCandidate.destination}</strong> • Route: <strong>{selectedCandidate.route}</strong>
+              </div>
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-              CPA: <strong>{selectedCandidate.closestPointOfApproachNm} nm</strong> at <strong>{selectedCandidate.cpaTimeUtc}</strong> • Destination: <strong>{selectedCandidate.destination}</strong> • Route: <strong>{selectedCandidate.route}</strong>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -907,6 +921,15 @@ export const VesselsOfInterestPanel: React.FC<VesselsOfInterestPanelProps> = ({
       {/* 4. TAB CONTENT: EXPLAINABLE EVIDENCE SCORE (SECTION 17) */}
       {/* ======================================================== */}
       {activeTab === 'evidence' && (
+        !selectedCandidate ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', backgroundColor: 'var(--bg-subtle)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <Ship size={36} color="var(--text-muted)" style={{ margin: '0 auto 12px auto' }} />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>No Candidate Vessels Correlated</h4>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '440px', margin: '6px auto 0 auto' }}>
+              No candidates available to compute explainable evidence breakdown for this incident.
+            </p>
+          </div>
+        ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           
           {/* Candidate Card Header */}
@@ -984,6 +1007,7 @@ export const VesselsOfInterestPanel: React.FC<VesselsOfInterestPanelProps> = ({
             </div>
           </div>
         </div>
+        )
       )}
 
       {/* ======================================================== */}
