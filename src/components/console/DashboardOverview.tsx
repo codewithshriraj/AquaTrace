@@ -3,6 +3,7 @@ import { mockIncidents } from '../../data/mockIncidents';
 import { regionalCoastlines } from '../../data/coastalBoundaries';
 import { Incident } from '../../types';
 import L from 'leaflet';
+import { CARTO_BASEMAPS } from '../../services/map/cartoConfig';
 import { 
   ShieldAlert, 
   CheckCircle2, 
@@ -60,23 +61,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onSelectIn
       });
 
       // Professional dark maritime carto basemap
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
-        {
-          subdomains: 'abcd',
-          maxZoom: 19,
-        }
-      ).addTo(map);
+      L.tileLayer(CARTO_BASEMAPS.voyagerNoLabels, {
+        subdomains: 'abcd',
+        maxZoom: 19,
+      }).addTo(map);
 
       // Add labels overlay
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
-        {
-          subdomains: 'abcd',
-          maxZoom: 19,
-          opacity: 0.7,
-        }
-      ).addTo(map);
+      L.tileLayer(CARTO_BASEMAPS.voyagerOnlyLabels, {
+        subdomains: 'abcd',
+        maxZoom: 19,
+        opacity: 0.7,
+      }).addTo(map);
 
       // Render regional coastline boundary paths
       regionalCoastlines.forEach((coast) => {

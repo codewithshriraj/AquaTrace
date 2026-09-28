@@ -3,6 +3,7 @@ import { Incident } from '../../types';
 import { regionalCoastlines } from '../../data/coastalBoundaries';
 import { SimulationResult } from '../../services/counterfactualSimulator';
 import L from 'leaflet';
+import { CARTO_BASEMAPS } from '../../services/map/cartoConfig';
 import { 
   Layers, 
   RotateCcw, 
@@ -282,13 +283,8 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
 
     baseGroup.clearLayers();
 
-    if (visualMode === 'nautical-chart') {
-      if (mapContainerRef.current) {
-        mapContainerRef.current.style.backgroundColor = '#0b1622';
-        mapContainerRef.current.style.backgroundImage = 'radial-gradient(#1e3a5f 1px, transparent 1px)';
-        mapContainerRef.current.style.backgroundSize = '32px 32px';
-      }
-      return;
+    if (mapContainerRef.current) {
+      mapContainerRef.current.style.backgroundColor = '#0b1622';
     }
 
     let tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -296,8 +292,13 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
     let subdomains = 'abc';
 
     if (visualMode === 'tactical-dark') {
-      tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      tileUrl = CARTO_BASEMAPS.darkMatter;
       maxZoom = 19;
+      subdomains = 'abcd';
+    } else if (visualMode === 'nautical-chart') {
+      tileUrl = CARTO_BASEMAPS.voyager;
+      maxZoom = 19;
+      subdomains = 'abcd';
     } else if (visualMode === 'ocean-bathymetry') {
       tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}';
       maxZoom = 13;

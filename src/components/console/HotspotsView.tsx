@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { mockHotspots } from '../../data/mockIncidents';
 import L from 'leaflet';
+import { CARTO_BASEMAPS } from '../../services/map/cartoConfig';
 import { MapPin, AlertTriangle, ShieldAlert, TrendingUp, Layers, RotateCcw, Compass } from 'lucide-react';
 
 export const HotspotsView: React.FC = () => {
@@ -28,6 +29,13 @@ export const HotspotsView: React.FC = () => {
       // High-res satellite imagery basemap
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 18,
+      }).addTo(map);
+
+      // CARTO Dark Matter labels overlay for clear maritime geography & ports
+      L.tileLayer(CARTO_BASEMAPS.darkMatterOnlyLabels, {
+        subdomains: 'abcd',
+        maxZoom: 18,
+        opacity: 0.85,
       }).addTo(map);
 
       // Layer group for hotspots and shipping corridors
