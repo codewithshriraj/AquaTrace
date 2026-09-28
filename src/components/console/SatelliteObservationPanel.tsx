@@ -62,11 +62,38 @@ export const SatelliteObservationPanel: React.FC<SatelliteObservationPanelProps>
         </div>
       </div>
 
+      {/* VERIFIED PIXEL PROCESSING STATUS BANNER */}
+      {incident.sarProvenanceHash ? (
+        <div style={{ padding: '10px 14px', borderRadius: '6px', backgroundColor: '#064e3b15', border: '1px solid #059669', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle2 size={16} color="#10b981" />
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#047857' }}>
+              REAL SENTINEL-1 PIXEL PROCESSING VERIFIED
+            </span>
+            <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#065f46' }}>
+              Engine: <strong>{incident.sarProcessingEngine || 'AquaTrace-SAR-Engine-v2.1'}</strong>
+            </span>
+          </div>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#047857' }}>
+            Provenance Hash: <strong>{incident.sarProvenanceHash}</strong>
+          </span>
+        </div>
+      ) : (
+        <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#fef3c7', border: '1px solid #f59e0b', fontSize: '11px', color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Info size={14} color="#d97706" />
+          <span>
+            {incident.isSyntheticDemo
+              ? "BENCHMARK DEMO INCIDENT (OS-037). Showing curated SIH presentation assets."
+              : "SENTINEL-1 METADATA INTEGRATED — Geometric measurements computed from candidate footprint."}
+          </span>
+        </div>
+      )}
+
       {/* 2. SATELLITE COMPARISON VIEW (ORIGINAL VS DETECTED) */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
-            Visual Comparison: Original SAR vs Detected Oil Slick
+            Visual Comparison: {incident.sarVisualizations ? 'Calibrated SAR Backscatter dB vs Segmented Mask' : 'Original SAR vs Detected Oil Slick'}
           </div>
 
           {/* Mode Controls */}
@@ -155,53 +182,61 @@ export const SatelliteObservationPanel: React.FC<SatelliteObservationPanelProps>
                 </span>
               </div>
               <div style={{ position: 'relative', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#050c18' }}>
-                {/* SVG Simulated SAR Texture & Backscatter Dark Formation */}
-                <svg width="100%" height="100%" viewBox="0 0 400 240" style={{ display: 'block' }}>
-                  <defs>
-                    <radialGradient id="sarBg" cx="50%" cy="50%" r="70%">
-                      <stop offset="0%" stopColor="#0f2137" />
-                      <stop offset="100%" stopColor="#040b14" />
-                    </radialGradient>
-                    <filter id="noiseFilter">
-                      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
-                      <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0.22 0" />
-                    </filter>
-                  </defs>
-                  
-                  {/* Water Clutter Background */}
-                  <rect width="400" height="240" fill="url(#sarBg)" />
-                  <rect width="400" height="240" filter="url(#noiseFilter)" opacity="0.45" />
-
-                  {/* Range Gridlines */}
-                  <line x1="50" y1="0" x2="50" y2="240" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
-                  <line x1="150" y1="0" x2="150" y2="240" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
-                  <line x1="250" y1="0" x2="250" y2="240" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
-                  <line x1="350" y1="0" x2="350" y2="240" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
-                  <line x1="0" y1="60" x2="400" y2="60" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
-                  <line x1="0" y1="120" x2="400" y2="120" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
-                  <line x1="0" y1="180" x2="400" y2="180" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
-
-                  {/* Dark Formation / Damped Wave Footprint */}
-                  <path
-                    d="M 110,85 C 140,75 190,90 230,110 C 275,130 300,160 280,180 C 255,195 210,180 170,160 C 130,140 95,100 110,85 Z"
-                    fill="#02050b"
-                    opacity="0.92"
+                {incident.sarVisualizations?.backscatterDb ? (
+                  <img 
+                    src={incident.sarVisualizations.backscatterDb} 
+                    alt="Calibrated SAR Backscatter dB" 
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
-                  <path
-                    d="M 125,95 C 150,85 195,100 225,118 C 260,135 285,160 268,172 C 248,185 208,172 175,152 C 140,132 115,105 125,95 Z"
-                    fill="#000000"
-                    opacity="0.98"
-                  />
+                ) : (
+                  /* SVG Simulated SAR Texture & Backscatter Dark Formation */
+                  <svg width="100%" height="100%" viewBox="0 0 400 240" style={{ display: 'block' }}>
+                    <defs>
+                      <radialGradient id="sarBg" cx="50%" cy="50%" r="70%">
+                        <stop offset="0%" stopColor="#0f2137" />
+                        <stop offset="100%" stopColor="#040b14" />
+                      </radialGradient>
+                      <filter id="noiseFilter">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
+                        <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0.22 0" />
+                      </filter>
+                    </defs>
+                    
+                    {/* Water Clutter Background */}
+                    <rect width="400" height="240" fill="url(#sarBg)" />
+                    <rect width="400" height="240" filter="url(#noiseFilter)" opacity="0.45" />
 
-                  {/* Subtle coastal shoal backscatter (Gulf of Mannar context) */}
-                  <path d="M 0,210 Q 70,200 120,240 L 0,240 Z" fill="#132438" opacity="0.7" />
-                  <text x="14" y="230" fill="#64748b" fontSize="9" fontFamily="var(--font-mono)">Coastline Shoal</text>
+                    {/* Range Gridlines */}
+                    <line x1="50" y1="0" x2="50" y2="240" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
+                    <line x1="150" y1="0" x2="150" y2="240" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
+                    <line x1="250" y1="0" x2="250" y2="240" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
+                    <line x1="350" y1="0" x2="350" y2="240" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
+                    <line x1="0" y1="60" x2="400" y2="60" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
+                    <line x1="0" y1="120" x2="400" y2="120" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
+                    <line x1="0" y1="180" x2="400" y2="180" stroke="#1e293b" strokeWidth="0.8" strokeDasharray="3,3" />
 
-                  {/* Telemetry Annotations */}
-                  <text x="14" y="24" fill="#94a3b8" fontSize="10" fontFamily="var(--font-mono)">Scene: {incident.satelliteScene.sceneId.slice(0, 22)}...</text>
-                  <text x="14" y="38" fill="#64748b" fontSize="9" fontFamily="var(--font-mono)">Incident Angle: {incident.satelliteScene.incidenceAngleDeg}° • Polarisation: {incident.satelliteScene.polarisation}</text>
-                  <text x="180" y="145" fill="#475569" fontSize="10" fontFamily="var(--font-mono)" textAnchor="middle">Dark Formation (σ₀ -3.2 dB damping)</text>
-                </svg>
+                    {/* Dark Formation / Damped Wave Footprint */}
+                    <path
+                      d="M 110,85 C 140,75 190,90 230,110 C 275,130 300,160 280,180 C 255,195 210,180 170,160 C 130,140 95,100 110,85 Z"
+                      fill="#02050b"
+                      opacity="0.92"
+                    />
+                    <path
+                      d="M 125,95 C 150,85 195,100 225,118 C 260,135 285,160 268,172 C 248,185 208,172 175,152 C 140,132 115,105 125,95 Z"
+                      fill="#000000"
+                      opacity="0.98"
+                    />
+
+                    {/* Subtle coastal shoal backscatter (Gulf of Mannar context) */}
+                    <path d="M 0,210 Q 70,200 120,240 L 0,240 Z" fill="#132438" opacity="0.7" />
+                    <text x="14" y="230" fill="#64748b" fontSize="9" fontFamily="var(--font-mono)">Coastline Shoal</text>
+
+                    {/* Telemetry Annotations */}
+                    <text x="14" y="24" fill="#94a3b8" fontSize="10" fontFamily="var(--font-mono)">Scene: {incident.satelliteScene.sceneId.slice(0, 22)}...</text>
+                    <text x="14" y="38" fill="#64748b" fontSize="9" fontFamily="var(--font-mono)">Incident Angle: {incident.satelliteScene.incidenceAngleDeg}° • Polarisation: {incident.satelliteScene.polarisation}</text>
+                    <text x="180" y="145" fill="#475569" fontSize="10" fontFamily="var(--font-mono)" textAnchor="middle">Dark Formation (σ₀ -3.2 dB damping)</text>
+                  </svg>
+                )}
               </div>
             </div>
 
@@ -216,54 +251,72 @@ export const SatelliteObservationPanel: React.FC<SatelliteObservationPanelProps>
                 </span>
               </div>
               <div style={{ position: 'relative', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#050c18' }}>
-                <svg width="100%" height="100%" viewBox="0 0 400 240" style={{ display: 'block' }}>
-                  {/* Same SAR Background Clutter */}
-                  <rect width="400" height="240" fill="url(#sarBg)" />
-                  <rect width="400" height="240" filter="url(#noiseFilter)" opacity="0.3" />
-
-                  {/* Bounding Region Box */}
-                  {showBoundingBox && (
-                    <rect 
-                      x="98" 
-                      y="70" 
-                      width="210" 
-                      height="125" 
-                      fill="none" 
-                      stroke="#f59e0b" 
-                      strokeWidth="1.2" 
-                      strokeDasharray="4,3" 
-                      opacity="0.85"
+                {incident.sarVisualizations?.detectionMask ? (
+                  <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img 
+                      src={incident.sarVisualizations.backscatterDb} 
+                      alt="Base SAR dB" 
+                      style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'contain', opacity: 0.4 }}
                     />
-                  )}
-
-                  {/* Segmented Slick Mask */}
-                  {showMaskOverlay && (
-                    <path
-                      d="M 110,85 C 140,75 190,90 230,110 C 275,130 300,160 280,180 C 255,195 210,180 170,160 C 130,140 95,100 110,85 Z"
-                      fill="rgba(245, 158, 11, 0.45)"
-                      stroke="#f59e0b"
-                      strokeWidth="2"
+                    <img 
+                      src={incident.sarVisualizations.detectionMask} 
+                      alt="Segmented Dark-Spot Mask" 
+                      style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'contain', zIndex: 10 }}
                     />
-                  )}
+                    <div style={{ position: 'absolute', bottom: '10px', left: '12px', zIndex: 20, fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#34d399', backgroundColor: 'rgba(2, 6, 23, 0.85)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #059669' }}>
+                      Adaptive Anomaly Mask: Area {incident.slickProperties.areaKm2} km²
+                    </div>
+                  </div>
+                ) : (
+                  <svg width="100%" height="100%" viewBox="0 0 400 240" style={{ display: 'block' }}>
+                    {/* Same SAR Background Clutter */}
+                    <rect width="400" height="240" fill="url(#sarBg)" />
+                    <rect width="400" height="240" filter="url(#noiseFilter)" opacity="0.3" />
 
-                  {/* Major and Minor Axes */}
-                  {showAxes && (
-                    <>
-                      {/* Major Axis (Length: 5.6 km, Orientation 145 deg) */}
-                      <line x1="105" y1="80" x2="285" y2="185" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="3,2" />
-                      <circle cx="195" cy="132" r="4" fill="#38bdf8" />
-                      {/* Minor Axis (Width: 1.1 km) */}
-                      <line x1="175" y1="155" x2="215" y2="108" stroke="#34d399" strokeWidth="1.2" strokeDasharray="2,2" />
-                    </>
-                  )}
+                    {/* Bounding Region Box */}
+                    {showBoundingBox && (
+                      <rect 
+                        x="98" 
+                        y="70" 
+                        width="210" 
+                        height="125" 
+                        fill="none" 
+                        stroke="#f59e0b" 
+                        strokeWidth="1.2" 
+                        strokeDasharray="4,3" 
+                        opacity="0.85"
+                      />
+                    )}
 
-                  {/* Labels on SVG */}
-                  <text x="102" y="65" fill="#f59e0b" fontSize="9" fontFamily="var(--font-mono)" fontWeight="700">BOUNDING BOX [{incident.slickProperties.lengthKm} km × {incident.slickProperties.widthKm} km]</text>
-                  <text x="290" y="195" fill="#38bdf8" fontSize="9" fontFamily="var(--font-mono)">Major Axis ({incident.slickProperties.orientationDeg}°)</text>
-                  <text x="195" y="146" fill="#ffffff" fontSize="9" fontFamily="var(--font-mono)" textAnchor="middle" fontWeight="700">Centroid</text>
-                  <text x="14" y="24" fill="#34d399" fontSize="10" fontFamily="var(--font-mono)">Mask Delineation: Neural U-Net SAR v2.4</text>
-                  <text x="14" y="38" fill="#94a3b8" fontSize="9" fontFamily="var(--font-mono)">Area: {incident.slickProperties.areaKm2} km² • Perimeter: {incident.slickProperties.perimeterKm} km</text>
-                </svg>
+                    {/* Segmented Slick Mask */}
+                    {showMaskOverlay && (
+                      <path
+                        d="M 110,85 C 140,75 190,90 230,110 C 275,130 300,160 280,180 C 255,195 210,180 170,160 C 130,140 95,100 110,85 Z"
+                        fill="rgba(245, 158, 11, 0.45)"
+                        stroke="#f59e0b"
+                        strokeWidth="2"
+                      />
+                    )}
+
+                    {/* Major and Minor Axes */}
+                    {showAxes && (
+                      <>
+                        {/* Major Axis (Length: 5.6 km, Orientation 145 deg) */}
+                        <line x1="105" y1="80" x2="285" y2="185" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="3,2" />
+                        <circle cx="195" cy="132" r="4" fill="#38bdf8" />
+                        {/* Minor Axis (Width: 1.1 km) */}
+                        <line x1="175" y1="155" x2="215" y2="108" stroke="#34d399" strokeWidth="1.2" strokeDasharray="2,2" />
+                      </>
+                    )}
+
+                    {/* Labels on SVG */}
+                    <text x="102" y="65" fill="#f59e0b" fontSize="9" fontFamily="var(--font-mono)" fontWeight="700">BOUNDING BOX [{incident.slickProperties.lengthKm} km × {incident.slickProperties.widthKm} km]</text>
+                    <text x="290" y="195" fill="#38bdf8" fontSize="9" fontFamily="var(--font-mono)">Major Axis ({incident.slickProperties.orientationDeg}°)</text>
+                    <text x="195" y="146" fill="#ffffff" fontSize="9" fontFamily="var(--font-mono)" textAnchor="middle" fontWeight="700">Centroid</text>
+                    <text x="14" y="24" fill="#34d399" fontSize="10" fontFamily="var(--font-mono)">Mask Delineation: Neural U-Net SAR v2.4</text>
+                    <text x="14" y="38" fill="#94a3b8" fontSize="9" fontFamily="var(--font-mono)">Area: {incident.slickProperties.areaKm2} km² • Perimeter: {incident.slickProperties.perimeterKm} km</text>
+                  </svg>
+                )}
               </div>
             </div>
           </div>

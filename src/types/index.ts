@@ -215,6 +215,14 @@ export interface Incident {
     explanation: string;
   };
   investigatorNotes?: string;
+  sarVisualizations?: {
+    rawSar?: string;
+    backscatterDb?: string;
+    detectionMask?: string;
+  };
+  sarProcessingEngine?: string;
+  sarProvenanceHash?: string;
+  sarCandidates?: any[];
 }
 
 export interface VesselProfile {
