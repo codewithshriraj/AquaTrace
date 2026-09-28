@@ -15,8 +15,52 @@ export function generateForensicInvestigationPDF(incident: Incident): jsPDF {
   const bottomThreshold = pageHeight - 20;
 
   let y = margin;
-  const topCandidate = incident.candidateVessels[0];
+  const topCandidate = incident.candidateVessels[0] || {
+    id: 'cand-none',
+    name: 'No Screened Candidate',
+    mmsi: 'N/A',
+    imo: 'N/A',
+    callsign: 'N/A',
+    flag: 'International',
+    flagCode: 'UN',
+    vesselType: 'N/A',
+    deadweightTonnage: 0,
+    lengthM: 0,
+    beamM: 0,
+    destination: 'N/A',
+    route: 'N/A',
+    correlationRank: 0,
+    correlationTier: 'INCONCLUSIVE' as const,
+    overallScore: 0,
+    scores: { satellite: 0, drift: 0, ais: 0, behaviour: 0, counterfactual: 0, history: 0 },
+    closestPointOfApproachNm: 0,
+    cpaTimeUtc: 'N/A',
+    speedAtCpaKnots: 0,
+    averageSpeedKnots: 0,
+    speedAnomaly: 'N/A',
+    courseAtCpaDeg: 0,
+    aisGapDetected: false,
+    kinematicDiscrepancy: false,
+    track: [],
+    counterfactualResult: {
+      similarityPct: 0,
+      iouMetric: 0,
+      hausdorffDistanceKm: 0,
+      simulatedSlickGeoJson: [],
+      driftDurationHours: 0,
+      particleCount: 0,
+    },
+    history: {
+      previousSpills: 0,
+      portDeficiencies: 0,
+      lastPscInspection: 'N/A',
+      routeFrequency: 'N/A',
+      pscDetentions: 0,
+    },
+  };
   const isInconclusive = incident.attributionStatus === 'INCONCLUSIVE';
+  const primaryCurrent = incident.currentVectors?.[0] || { speedKnots: 0.45, directionDeg: 140 };
+  const primaryWind = incident.windVectors?.[0] || { speedKnots: 8.5, directionDeg: 270 };
 
   function checkPageBreak(requiredSpace: number) {
     if (y + requiredSpace > bottomThreshold) {
@@ -153,12 +197,12 @@ export function generateForensicInvestigationPDF(incident: Incident): jsPDF {
   // 2. EXECUTIVE SUMMARY
   // ==========================================
   drawSectionTitle('2. Executive Summary');
-  const execSummary = `On ${incident.detectionTimeUtc}, satellite radar observation (${incident.satelliteScene.satellite}) detected an anomalous surface slick of estimated area ${incident.slickProperties.areaKm2} km² (estimated volume ~${incident.slickProperties.estimatedVolumeM3} m³) in the ${incident.region}. Reverse Lagrangian hydrodynamic hindcasting driven by simulated metocean forcing (currents: ${incident.currentVectors[0].speedKnots} kts @ ${incident.currentVectors[0].directionDeg}°, winds: ${incident.windVectors[0].speedKnots} kts @ ${incident.windVectors[0].directionDeg}°) reconstructed a release window between ${incident.releaseWindow.startUtc.slice(11, 16)}–${incident.releaseWindow.endUtc.slice(11, 16)} UTC at centroid ${incident.releaseWindow.centroidLat}°N, ${incident.releaseWindow.centroidLng}°E.`;
+  const execSummary = `On ${incident.detectionTimeUtc}, satellite radar observation (${incident.satelliteScene.satellite}) detected an anomalous surface slick of estimated area ${incident.slickProperties.areaKm2} km² (estimated volume ~${incident.slickProperties.estimatedVolumeM3} m³) in the ${incident.region}. Reverse Lagrangian hydrodynamic hindcasting driven by simulated metocean forcing (currents: ${primaryCurrent.speedKnots} kts @ ${primaryCurrent.directionDeg}°, winds: ${primaryWind.speedKnots} kts @ ${primaryWind.directionDeg}°) reconstructed a release window between ${incident.releaseWindow.startUtc.slice(11, 16)}–${incident.releaseWindow.endUtc.slice(11, 16)} UTC at centroid ${incident.releaseWindow.centroidLat}°N, ${incident.releaseWindow.centroidLng}°E.`;
   drawParagraph(execSummary);
 
   if (isInconclusive) {
     drawParagraph(
-      `Evaluation of the candidate fleet yielded an INCONCLUSIVE verdict. Due to elevated biogenic look-alike likelihood (${incident.slickProperties.confidencePct}% confidence) under sub-threshold wind regimes (${incident.windVectors[0].speedKnots} kts) and sparse regional AIS telemetry, the evidence is insufficient to attribute release to a specific commercial vessel without unacceptable false-positive risk. Mandatory evidence-based abstention is enforced.`
+      `Evaluation of the candidate fleet yielded an INCONCLUSIVE verdict. Due to elevated biogenic look-alike likelihood (${incident.slickProperties.confidencePct}% confidence) under sub-threshold wind regimes (${primaryWind.speedKnots} kts) and sparse regional AIS telemetry, the evidence is insufficient to attribute release to a specific commercial vessel without unacceptable false-positive risk. Mandatory evidence-based abstention is enforced.`
     );
   } else {
     drawParagraph(
@@ -286,7 +330,7 @@ export function generateForensicInvestigationPDF(incident: Incident): jsPDF {
     'Backward trajectory reconstruction uses client-side analytical vector advection parameterizing surface current forcing and atmospheric wind leeway:'
   );
   drawParagraph(
-    `• Governing Transport Equation: U_total = U_current + 0.033 × U_wind\n• Surface Current Field (U_curr): ${incident.currentVectors[0].speedKnots} kts @ ${incident.currentVectors[0].directionDeg}° (parameterizing CMEMS advection)\n• Atmospheric Wind Field (U_wind): ${incident.windVectors[0].speedKnots} kts @ ${incident.windVectors[0].directionDeg}° (parameterizing ERA5 wind stress)\n• Wind Leeway Factor (α): 3.3% standard empirical coefficient\n• Traceback Horizon: ~5.2 hours reverse advection to origin apex`
+    `• Governing Transport Equation: U_total = U_current + 0.033 × U_wind\n• Surface Current Field (U_curr): ${primaryCurrent.speedKnots} kts @ ${primaryCurrent.directionDeg}° (parameterizing CMEMS advection)\n• Atmospheric Wind Field (U_wind): ${primaryWind.speedKnots} kts @ ${primaryWind.directionDeg}° (parameterizing ERA5 wind stress)\n• Wind Leeway Factor (α): 3.3% standard empirical coefficient\n• Traceback Horizon: ~5.2 hours reverse advection to origin apex`
   );
 
   // ==========================================

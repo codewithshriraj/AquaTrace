@@ -8,7 +8,16 @@ function parseUrlState() {
     return {
       route: 'landing' as const,
       navView: 'investigation-map',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
+    };
+  }
+
+  // Handle /console/overview
+  if (path === '/console/overview' || path === '/console/overview/') {
+    return {
+      route: 'console' as const,
+      navView: 'overview',
+      incidentId: 'OS-037',
     };
   }
 
@@ -26,7 +35,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'incidents',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -34,7 +43,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'vessels',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -42,7 +51,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'alerts',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -50,7 +59,23 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'replay',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
+    };
+  }
+
+  if (path.startsWith('/console/explorer') || path.startsWith('/console/data-explorer')) {
+    return {
+      route: 'console' as const,
+      navView: 'data-explorer',
+      incidentId: 'OS-037',
+    };
+  }
+
+  if (path.startsWith('/console/integrity') || path.startsWith('/console/data-integrity')) {
+    return {
+      route: 'console' as const,
+      navView: 'data-integrity',
+      incidentId: 'OS-037',
     };
   }
 
@@ -58,7 +83,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'data-sources',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -66,7 +91,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'reports',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -74,7 +99,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'settings',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -82,7 +107,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'evidence-graph',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -90,7 +115,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'kinematics',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -98,7 +123,7 @@ function parseUrlState() {
     return {
       route: 'console' as const,
       navView: 'hotspots',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     };
   }
 
@@ -106,7 +131,7 @@ function parseUrlState() {
   return {
     route: 'console' as const,
     navView: 'investigation-map',
-    incidentId: 'OS-042',
+    incidentId: 'OS-037',
   };
 }
 
@@ -122,8 +147,8 @@ export function App() {
   }, []);
 
   const navigateToConsole = (incidentId?: string) => {
-    const targetId = incidentId || 'OS-042';
-    const targetPath = incidentId ? `/console/incidents/${incidentId}` : '/console';
+    const targetId = incidentId || 'OS-037';
+    const targetPath = incidentId ? `/console/incidents/${incidentId}` : '/console/incidents/OS-037';
     window.history.pushState({}, '', targetPath);
     setUrlState({
       route: 'console',
@@ -138,7 +163,7 @@ export function App() {
     setUrlState({
       route: 'landing',
       navView: 'investigation-map',
-      incidentId: 'OS-042',
+      incidentId: 'OS-037',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Incident } from '../../types';
 import { mockIncidents } from '../../data/mockIncidents';
+import { SimulationResult } from '../../services/counterfactualSimulator';
+import { providerRegistry, OperatingMode } from '../../services/dataProvider/providerRegistry';
 import { InvestigationMap } from './InvestigationMap';
 import { ReplayTimeline } from './ReplayTimeline';
 import { CandidateAnalysisPanel } from './CandidateAnalysisPanel';
+import { DashboardOverview } from './DashboardOverview';
+import { InvestigationPipeline } from './InvestigationPipeline';
+import { SatelliteObservationPanel } from './SatelliteObservationPanel';
+import { OriginDriftPanel } from './OriginDriftPanel';
+import { VesselsOfInterestPanel } from './VesselsOfInterestPanel';
+import { ForensicEvidenceChainPanel } from './ForensicEvidenceChainPanel';
+import { ProvenanceTimelinePanel } from './ProvenanceTimelinePanel';
 import { EvidenceGraphView } from './EvidenceGraphView';
 import { KinematicCheckView } from './KinematicCheckView';
 import { HotspotsView } from './HotspotsView';
 import { DataSourcesView } from './DataSourcesView';
+import { DataExplorerView } from './DataExplorerView';
+import { DataIntegrityView } from './DataIntegrityView';
 import { AlertFeed } from './AlertFeed';
 import { FieldView } from './FieldView';
 import { IncidentsListView } from './IncidentsListView';
@@ -17,6 +28,7 @@ import { ReportsArchiveView } from './ReportsArchiveView';
 import { SettingsView } from './SettingsView';
 import { InvestigationReportModal } from './InvestigationReportModal';
 import { AuditTrailDrawer } from './AuditTrailDrawer';
+import { PipelineHealthModal } from './PipelineHealthModal';
 import { NextPassWidget } from './NextPassWidget';
 import { 
   Compass, 
@@ -35,7 +47,13 @@ import {
   Sliders,
   Menu,
   X as CloseIcon,
-  Network
+  Network,
+  LayoutDashboard,
+  Radar,
+  RotateCcw,
+  CheckCircle2,
+  AlertTriangle,
+  Radio
 } from 'lucide-react';
 
 interface ConsoleWorkspaceProps {
@@ -46,28 +64,40 @@ interface ConsoleWorkspaceProps {
 }
 
 export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
-  initialIncidentId = 'OS-042',
+  initialIncidentId = 'OS-037',
   initialNavView = 'investigation-map',
   onReturnToLanding,
   onNavigateRoute,
 }) => {
+  // Global platform mode
+  const [platformMode, setPlatformMode] = useState<OperatingMode>(() => providerRegistry.getMode());
+  const [isPipelineHealthOpen, setIsPipelineHealthOpen] = useState<boolean>(false);
+
   // Current active incident
   const [selectedIncidentId, setSelectedIncidentId] = useState<string>(initialIncidentId);
-  const currentIncident = mockIncidents.find((i) => i.id === selectedIncidentId) || mockIncidents[0];
+  const allAvailableIncidents = providerRegistry.getAllIncidents();
+  const currentIncident = allAvailableIncidents.find((i) => i.id === selectedIncidentId) || allAvailableIncidents[0];
 
   // Active navigation view
   const [activeNavView, setActiveNavView] = useState<string>(initialNavView);
+
+  // Active analytical inspector tab in investigation view
+  const [activeInspectorTab, setActiveInspectorTab] = useState<'vessels' | 'satellite' | 'origin-drift' | 'forensic-chain' | 'provenance'>('vessels');
 
   // Candidate selection
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(
     currentIncident.candidateVessels[0]?.id || null
   );
 
-  // Counterfactual overlay toggle
+  // Counterfactual overlay & in-silico simulation state
   const [isCounterfactualOverlayActive, setIsCounterfactualOverlayActive] = useState<boolean>(true);
+  const [activeSimulationResult, setActiveSimulationResult] = useState<SimulationResult | null>(null);
+  const [activeSimulationFrameIndex, setActiveSimulationFrameIndex] = useState<number>(5);
+  const [showSimulationParticles, setShowSimulationParticles] = useState<boolean>(true);
 
-  // Replay timeline index
+  // Replay timeline index & visibility
   const [replayTimeIndex, setReplayTimeIndex] = useState<number>(3);
+  const [isTimelineVisible, setIsTimelineVisible] = useState<boolean>(false);
 
   // UI Modals & Views
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
@@ -154,6 +184,27 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <button
+            onClick={() => handleNavClick('overview', '/console/overview')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 10px',
+              borderRadius: '4px',
+              border: 'none',
+              backgroundColor: activeNavView === 'overview' ? 'var(--bg-subtle)' : 'transparent',
+              color: activeNavView === 'overview' ? 'var(--accent-blue)' : 'var(--text-primary)',
+              fontWeight: activeNavView === 'overview' ? 600 : 500,
+              fontSize: '13px',
+              cursor: 'pointer',
+              textAlign: 'left',
+              width: '100%'
+            }}
+          >
+            <LayoutDashboard size={15} /> Overview Dashboard
+          </button>
+
+          <button
             onClick={() => handleNavClick('investigation-map', `/console/incidents/${selectedIncidentId}`)}
             style={{
               display: 'flex',
@@ -192,7 +243,28 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
               width: '100%'
             }}
           >
-            <Layers size={15} /> Incident Registry ({mockIncidents.length})
+            <Layers size={15} /> Incident Registry ({allAvailableIncidents.length})
+          </button>
+
+          <button
+            onClick={() => handleNavClick('data-explorer', '/console/explorer')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 10px',
+              borderRadius: '4px',
+              border: 'none',
+              backgroundColor: activeNavView === 'data-explorer' ? 'var(--bg-subtle)' : 'transparent',
+              color: activeNavView === 'data-explorer' ? 'var(--accent-blue)' : 'var(--text-primary)',
+              fontWeight: activeNavView === 'data-explorer' ? 600 : 500,
+              fontSize: '13px',
+              cursor: 'pointer',
+              textAlign: 'left',
+              width: '100%'
+            }}
+          >
+            <Radio size={15} /> Satellite AOI Explorer
           </button>
 
           <button
@@ -388,6 +460,27 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
           </button>
 
           <button
+            onClick={() => handleNavClick('data-integrity', '/console/integrity')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 10px',
+              borderRadius: '4px',
+              border: 'none',
+              backgroundColor: activeNavView === 'data-integrity' ? 'var(--bg-subtle)' : 'transparent',
+              color: activeNavView === 'data-integrity' ? 'var(--accent-blue)' : 'var(--text-primary)',
+              fontWeight: activeNavView === 'data-integrity' ? 600 : 500,
+              fontSize: '13px',
+              cursor: 'pointer',
+              textAlign: 'left',
+              width: '100%'
+            }}
+          >
+            <ShieldCheck size={15} /> Data Lineage Diagnostic
+          </button>
+
+          <button
             onClick={() => handleNavClick('settings', '/console/settings')}
             style={{
               display: 'flex',
@@ -417,7 +510,7 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
   return (
     <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-body)', overflow: 'hidden' }}>
       
-      {/* 0. PERSISTENT DEMONSTRATION DISCLOSURE BANNER */}
+      {/* 0. PERSISTENT OPERATING MODE & DATA DISCLOSURE BANNER */}
       <div 
         style={{ 
           backgroundColor: '#020617', 
@@ -435,22 +528,80 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
           flexShrink: 0
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#f59e0b', fontWeight: 700 }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'inline-block' }}></span>
-            DEMONSTRATION MODE
-          </span>
-          <span>•</span>
-          <span>CASE: <strong style={{ color: '#f8fafc' }}>{selectedIncidentId}</strong></span>
-          <span>•</span>
-          <span>SYNTHETIC AIS TELEMETRY (MarineCadastre format)</span>
-          <span>•</span>
-          <span>SIMULATED METOCEAN FORCING</span>
-        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span>SIH 2026 PS 143 • NTRO</span>
+          {/* Mode Switcher Toggle Pill */}
+          <div style={{ display: 'flex', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '4px', padding: '1px' }}>
+            <button
+              onClick={() => {
+                providerRegistry.setMode('LIVE');
+                setPlatformMode('LIVE');
+              }}
+              style={{
+                padding: '2px 8px',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: platformMode === 'LIVE' ? 800 : 500,
+                backgroundColor: platformMode === 'LIVE' ? '#059669' : 'transparent',
+                color: platformMode === 'LIVE' ? '#ffffff' : '#94a3b8',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+              title="Activate Real Live External Feeds (Copernicus CDSE, NOAA, GFW)"
+            >
+              ● LIVE DATA
+            </button>
+            <button
+              onClick={() => {
+                providerRegistry.setMode('DEMO');
+                setPlatformMode('DEMO');
+              }}
+              style={{
+                padding: '2px 8px',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: platformMode === 'DEMO' ? 800 : 500,
+                backgroundColor: platformMode === 'DEMO' ? '#d97706' : 'transparent',
+                color: platformMode === 'DEMO' ? '#ffffff' : '#94a3b8',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+              title="Activate Curated Deterministic Benchmark Case (OS-037)"
+            >
+              ● DEMO MODE
+            </button>
+          </div>
+
           <span>•</span>
-          <span style={{ color: '#38bdf8' }}>EVALUATION BENCHMARK: ZENODO (JRC)</span>
+          {platformMode === 'LIVE' ? (
+            <span style={{ color: '#34d399', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <strong>LIVE PIPELINE ACTIVE</strong>: Copernicus CDSE OData • NOAA GFS • INCOIS ROMS • GFW Public AIS (NRT 72h)
+            </span>
+          ) : (
+            <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <strong>CURATED BENCHMARK DEMO</strong>: Case {selectedIncidentId} • Controlled Synthetic Data • Guaranteed Deterministic
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span>SIH 2026 PS-26143 • NTRO</span>
+          <span>•</span>
+          <button
+            onClick={() => setIsPipelineHealthOpen(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#38bdf8',
+              fontSize: '11px',
+              fontFamily: 'var(--font-mono)',
+              cursor: 'pointer',
+              textDecoration: 'underline'
+            }}
+          >
+            Pipeline Health Check
+          </button>
         </div>
       </div>
 
@@ -518,7 +669,7 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
                 maxWidth: isMobile ? '130px' : '260px'
               }}
             >
-              {mockIncidents.map((inc) => (
+              {allAvailableIncidents.map((inc) => (
                 <option key={inc.id} value={inc.id}>
                   {inc.id} — {inc.region}
                 </option>
@@ -542,11 +693,50 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
           </div>
         </div>
 
-        {/* Center: System Widgets (Desktop only) */}
+        {/* Center: System Widgets & Live Data Status Indicator (Desktop only) */}
         {!isMobile && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Live Data Status Indicator Bar */}
+            <button
+              onClick={() => setIsPipelineHealthOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 10px',
+                borderRadius: '4px',
+                backgroundColor: '#1e293b',
+                border: '1px solid #334155',
+                color: '#cbd5e1',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                cursor: 'pointer'
+              }}
+              title="Inspect Live Data Pipeline Status"
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }} />
+                <span>Sat: <strong>CDSE</strong></span>
+              </span>
+              <span style={{ color: '#475569' }}>|</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#fbbf24' }} />
+                <span>AIS: <strong>NRT 72h</strong></span>
+              </span>
+              <span style={{ color: '#475569' }}>|</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }} />
+                <span>Ocean: <strong>ROMS</strong></span>
+              </span>
+              <span style={{ color: '#475569' }}>|</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }} />
+                <span>Wind: <strong>NOAA</strong></span>
+              </span>
+            </button>
+
             <NextPassWidget />
-            <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#94a3b8' }}>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#94a3b8' }}>
               {currentUtcTime}
             </div>
           </div>
@@ -555,38 +745,68 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
         {/* Right: Operational Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           
-          {/* Quick Demo Case Switcher Buttons */}
-          <button
-            onClick={() => handleSelectIncidentFromList('OS-042')}
-            className={`btn btn-sm ${selectedIncidentId === 'OS-042' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '3px 8px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}
-            title="Load Prime Showcase Case (MT Al-Hikma)"
-          >
-            OS-042
-          </button>
+          {/* Quick Demo Case Switcher Buttons (Sleek Segmented Pill) */}
+          <div style={{ display: 'flex', backgroundColor: '#1e293b', borderRadius: '4px', padding: '2px', border: '1px solid #334155' }}>
+            <button
+              onClick={() => handleNavClick('overview', '/console/overview')}
+              style={{
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: activeNavView === 'overview' ? 700 : 500,
+                backgroundColor: activeNavView === 'overview' ? '#0284c7' : 'transparent',
+                color: activeNavView === 'overview' ? '#ffffff' : '#94a3b8',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+              title="Open Operational Overview Dashboard"
+            >
+              Overview
+            </button>
 
-          <button
-            onClick={() => handleSelectIncidentFromList('OS-037')}
-            className={`btn btn-sm ${selectedIncidentId === 'OS-037' ? 'btn-amber' : 'btn-secondary'}`}
-            style={{ padding: '3px 8px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}
-            title="Load Inconclusive Abstention Case (Gulf of Mannar)"
-          >
-            OS-037
-          </button>
+            <button
+              onClick={() => handleSelectIncidentFromList('OS-037')}
+              style={{
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: selectedIncidentId === 'OS-037' && activeNavView === 'investigation-map' ? 700 : 500,
+                backgroundColor: selectedIncidentId === 'OS-037' && activeNavView === 'investigation-map' ? '#ea580c' : 'transparent',
+                color: selectedIncidentId === 'OS-037' && activeNavView === 'investigation-map' ? '#ffffff' : '#94a3b8',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+              title="Load Inconclusive Abstention Case (Gulf of Mannar)"
+            >
+              OS-037 (Demo)
+            </button>
 
-          <button
-            onClick={() => setIsReportModalOpen(true)}
-            className="btn btn-secondary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}
-          >
-            <FileText size={13} /> {isMobile ? '' : 'Report'}
-          </button>
+            <button
+              onClick={() => handleSelectIncidentFromList('OS-042')}
+              style={{
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: selectedIncidentId === 'OS-042' && activeNavView === 'investigation-map' ? 700 : 500,
+                backgroundColor: selectedIncidentId === 'OS-042' && activeNavView === 'investigation-map' ? '#0284c7' : 'transparent',
+                color: selectedIncidentId === 'OS-042' && activeNavView === 'investigation-map' ? '#ffffff' : '#94a3b8',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+              title="Load Prime Showcase Case (MT Al-Hikma)"
+            >
+              OS-042
+            </button>
+          </div>
 
           {!isMobile && (
             <button
               onClick={() => setIsAuditDrawerOpen(true)}
               className="btn btn-secondary btn-sm"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', padding: '4px 8px', backgroundColor: '#1e293b', color: '#cbd5e1', borderColor: '#334155' }}
             >
               <ShieldCheck size={13} /> Audit
             </button>
@@ -595,7 +815,7 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
           <button
             onClick={() => setIsFieldViewActive(true)}
             className="btn btn-dark btn-sm"
-            style={{ backgroundColor: '#1e293b', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}
+            style={{ backgroundColor: '#1e293b', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', padding: '4px 8px' }}
             title="Switch to Tablet Field View"
           >
             <Tablet size={13} /> {isMobile ? '' : 'Field'}
@@ -610,7 +830,7 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
         {!isMobile && (
           <aside
             style={{
-              width: '230px',
+              width: '200px',
               backgroundColor: '#ffffff',
               borderRight: '1px solid var(--border)',
               display: 'flex',
@@ -677,45 +897,108 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
         {/* MAIN WORKING AREA */}
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           
-          {activeNavView === 'investigation-map' ? (
-            isMobile ? (
-              // Mobile stacked layout: Map on top (380px), Candidate Analysis Panel scrolling underneath
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-                <div style={{ height: '380px', minHeight: '380px', flexShrink: 0, position: 'relative' }}>
-                  <InvestigationMap
-                    incident={currentIncident}
-                    selectedCandidateId={selectedCandidateId}
-                    onSelectCandidate={(id) => setSelectedCandidateId(id)}
-                    replayTimeIndex={replayTimeIndex}
-                    showCounterfactualOverlay={isCounterfactualOverlayActive}
-                  />
+          {activeNavView === 'overview' ? (
+            <DashboardOverview onSelectIncident={(id) => handleSelectIncidentFromList(id)} />
+          ) : activeNavView === 'investigation-map' ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+              
+              {/* INCIDENT COMPACT SUMMARY HEADER (SECTION 5) */}
+              <div 
+                style={{
+                  backgroundColor: '#070c14',
+                  borderBottom: '1px solid #1e293b',
+                  padding: '6px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                  flexShrink: 0
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.01em', fontFamily: 'var(--font-mono)', margin: 0 }}>
+                      INCIDENT {currentIncident.id}
+                    </h2>
+                    <span style={{ color: '#475569' }}>•</span>
+                    <span style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 600 }}>
+                      {currentIncident.region}
+                    </span>
+                    <span 
+                      className={`badge ${
+                        currentIncident.attributionStatus === 'INCONCLUSIVE' 
+                          ? 'badge-red' 
+                          : currentIncident.attributionStatus === 'HIGH CORRELATION' 
+                          ? 'badge-blue' 
+                          : 'badge-amber'
+                      }`}
+                      style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px' }}
+                    >
+                      {currentIncident.attributionStatus === 'INCONCLUSIVE' 
+                        ? 'INCONCLUSIVE ABSTENTION' 
+                        : 'HIGH CORRELATION'}
+                    </span>
+                  </div>
+
+                  {/* Compact Metadata Strip */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#94a3b8', flexWrap: 'wrap' }}>
+                    <span>Sensor: <strong style={{ color: '#f8fafc' }}>{currentIncident.satelliteScene.satellite.split(' ')[0]}</strong></span>
+                    <span>•</span>
+                    <span>Area: <strong style={{ color: '#38bdf8' }}>{currentIncident.slickProperties.areaKm2} km²</strong></span>
+                    <span>•</span>
+                    <span>Age: <strong style={{ color: '#fbbf24' }}>{currentIncident.slickProperties.estimatedAgeHours.split('(')[0].trim()}</strong></span>
+                    <span>•</span>
+                    <span>Origin: <strong style={{ color: currentIncident.slickProperties.confidencePct > 70 ? '#34d399' : '#f87171' }}>{currentIncident.slickProperties.confidencePct.toFixed(0)}%</strong></span>
+                    <span>•</span>
+                    <span>AIS: <strong style={{ color: '#38bdf8' }}>{currentIncident.candidateVessels.length} vessels</strong></span>
+                  </div>
                 </div>
 
-                <div style={{ flexShrink: 0 }}>
-                  <ReplayTimeline
-                    incident={currentIncident}
-                    currentTimeIndex={replayTimeIndex}
-                    onTimeChange={(idx) => setReplayTimeIndex(idx)}
-                  />
-                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    onClick={() => setIsTimelineVisible(!isTimelineVisible)}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      backgroundColor: isTimelineVisible ? '#1e293b' : 'transparent',
+                      color: isTimelineVisible ? '#38bdf8' : '#94a3b8',
+                      borderColor: isTimelineVisible ? '#38bdf8' : '#334155',
+                      fontSize: '11px',
+                      padding: '3px 8px',
+                      minHeight: '26px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                    title="Toggle Replay Timeline Scrubber"
+                  >
+                    <Clock size={12} />
+                    <span>{isTimelineVisible ? 'Hide Timeline' : 'Replay Timeline'}</span>
+                  </button>
 
-                <div style={{ flex: 1, borderTop: '1px solid var(--border)' }}>
-                  <CandidateAnalysisPanel
-                    incident={currentIncident}
-                    selectedCandidateId={selectedCandidateId}
-                    onSelectCandidate={(id) => setSelectedCandidateId(id)}
-                    isCounterfactualOverlayActive={isCounterfactualOverlayActive}
-                    onToggleCounterfactualOverlay={(active) => setIsCounterfactualOverlayActive(active)}
-                  />
+                  <button
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="btn btn-primary btn-sm"
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600, padding: '4px 10px', minHeight: '26px' }}
+                  >
+                    <FileText size={12} /> Generate Investigation Report
+                  </button>
                 </div>
               </div>
-            ) : (
-              // Desktop side-by-side layout: Map (approx 65%) + Candidate Panel (approx 35%)
-              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: windowWidth < 1200 ? '1fr 340px' : '1fr 390px', overflow: 'hidden' }}>
-                
-                {/* GIS Map & Bottom Replay Timeline */}
-                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
-                  <div style={{ flex: 1, position: 'relative' }}>
+
+              {/* HORIZONTAL INVESTIGATION PIPELINE (SECTION 6) */}
+              <InvestigationPipeline
+                incident={currentIncident}
+                activeStageId={activeInspectorTab}
+                onSelectStage={(stageTab) => {
+                  setActiveInspectorTab(stageTab as any);
+                }}
+              />
+
+              {/* SPLIT WORKSPACE: MAP (LEFT) + ANALYTICAL INSPECTOR (RIGHT) */}
+              {isMobile ? (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+                  <div style={{ height: '360px', minHeight: '360px', flexShrink: 0, position: 'relative' }}>
                     <InvestigationMap
                       incident={currentIncident}
                       selectedCandidateId={selectedCandidateId}
@@ -724,26 +1007,253 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
                       showCounterfactualOverlay={isCounterfactualOverlayActive}
                     />
                   </div>
-
-                  {/* Bottom Incident Replay Timeline */}
-                  <ReplayTimeline
-                    incident={currentIncident}
-                    currentTimeIndex={replayTimeIndex}
-                    onTimeChange={(idx) => setReplayTimeIndex(idx)}
-                  />
+                  {isTimelineVisible && (
+                    <div style={{ flexShrink: 0, position: 'relative' }}>
+                      <ReplayTimeline
+                        incident={currentIncident}
+                        currentTimeIndex={replayTimeIndex}
+                        onTimeChange={(idx) => setReplayTimeIndex(idx)}
+                      />
+                    </div>
+                  )}
+                  {/* Mobile Tab Strip */}
+                  <div style={{ display: 'flex', backgroundColor: '#0f172a', borderBottom: '1px solid #1e293b', overflowX: 'auto', flexShrink: 0, padding: '4px', gap: '4px' }}>
+                    <button onClick={() => setActiveInspectorTab('vessels')} className={`btn btn-sm ${activeInspectorTab === 'vessels' ? 'btn-primary' : 'btn-dark'}`} style={{ fontSize: '10.5px' }}>Vessels</button>
+                    <button onClick={() => setActiveInspectorTab('satellite')} className={`btn btn-sm ${activeInspectorTab === 'satellite' ? 'btn-primary' : 'btn-dark'}`} style={{ fontSize: '10.5px' }}>Satellite</button>
+                    <button onClick={() => setActiveInspectorTab('origin-drift')} className={`btn btn-sm ${activeInspectorTab === 'origin-drift' ? 'btn-primary' : 'btn-dark'}`} style={{ fontSize: '10.5px' }}>Origin/Drift</button>
+                    <button onClick={() => setActiveInspectorTab('forensic-chain')} className={`btn btn-sm ${activeInspectorTab === 'forensic-chain' ? 'btn-primary' : 'btn-dark'}`} style={{ fontSize: '10.5px' }}>Evidence DAG</button>
+                    <button onClick={() => setActiveInspectorTab('provenance')} className={`btn btn-sm ${activeInspectorTab === 'provenance' ? 'btn-primary' : 'btn-dark'}`} style={{ fontSize: '10.5px' }}>Provenance</button>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    {activeInspectorTab === 'vessels' && (
+                      <VesselsOfInterestPanel
+                        incident={currentIncident}
+                        selectedCandidateId={selectedCandidateId}
+                        onSelectCandidate={(id) => setSelectedCandidateId(id)}
+                        isCounterfactualOverlayActive={isCounterfactualOverlayActive}
+                        onToggleCounterfactualOverlay={(active) => setIsCounterfactualOverlayActive(active)}
+                        activeSimulationResult={activeSimulationResult}
+                        onSimulationResultChange={(result) => setActiveSimulationResult(result)}
+                        activeSimulationFrameIndex={activeSimulationFrameIndex}
+                        onSimulationFrameIndexChange={(frame) => setActiveSimulationFrameIndex(frame)}
+                        showSimulationParticles={showSimulationParticles}
+                        onToggleSimulationParticles={(show) => setShowSimulationParticles(show)}
+                      />
+                    )}
+                    {activeInspectorTab === 'satellite' && (
+                      <SatelliteObservationPanel incident={currentIncident} />
+                    )}
+                    {activeInspectorTab === 'origin-drift' && (
+                      <OriginDriftPanel incident={currentIncident} />
+                    )}
+                    {activeInspectorTab === 'forensic-chain' && (
+                      <ForensicEvidenceChainPanel incident={currentIncident} />
+                    )}
+                    {activeInspectorTab === 'provenance' && (
+                      <ProvenanceTimelinePanel incident={currentIncident} />
+                    )}
+                  </div>
                 </div>
+              ) : (
+                <div style={{ flex: 1, display: 'grid', gridTemplateColumns: windowWidth < 1300 ? '1fr 410px' : '1fr 450px', overflow: 'hidden' }}>
+                  
+                  {/* Left: Leaflet GIS Map + Optional Replay Timeline */}
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <InvestigationMap
+                        incident={currentIncident}
+                        selectedCandidateId={selectedCandidateId}
+                        onSelectCandidate={(id) => setSelectedCandidateId(id)}
+                        replayTimeIndex={replayTimeIndex}
+                        showCounterfactualOverlay={isCounterfactualOverlayActive}
+                        simulationResult={activeSimulationResult}
+                        simulationFrameIndex={activeSimulationFrameIndex}
+                        showParticles={showSimulationParticles}
+                      />
+                    </div>
+                    {isTimelineVisible && (
+                      <div style={{ position: 'relative', borderTop: '1px solid var(--border)' }}>
+                        <button
+                          onClick={() => setIsTimelineVisible(false)}
+                          style={{
+                            position: 'absolute',
+                            top: '6px',
+                            right: '12px',
+                            zIndex: 10,
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            fontSize: '11px',
+                            cursor: 'pointer'
+                          }}
+                          title="Hide Timeline"
+                        >
+                          ✕ Close
+                        </button>
+                        <ReplayTimeline
+                          incident={currentIncident}
+                          currentTimeIndex={replayTimeIndex}
+                          onTimeChange={(idx) => setReplayTimeIndex(idx)}
+                        />
+                      </div>
+                    )}
+                  </div>
 
-                {/* Right Analytical Candidate Analysis Panel */}
-                <CandidateAnalysisPanel
-                  incident={currentIncident}
-                  selectedCandidateId={selectedCandidateId}
-                  onSelectCandidate={(id) => setSelectedCandidateId(id)}
-                  isCounterfactualOverlayActive={isCounterfactualOverlayActive}
-                  onToggleCounterfactualOverlay={(active) => setIsCounterfactualOverlayActive(active)}
-                />
+                  {/* Right: Analytical Inspector Tabs & Content Container */}
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', borderLeft: '1px solid var(--border)', backgroundColor: '#ffffff' }}>
+                    {/* Inspector Top Tab Selector */}
+                    <div 
+                      style={{ 
+                        display: 'flex', 
+                        backgroundColor: '#0a1120', 
+                        borderBottom: '1px solid #1e293b', 
+                        overflowX: 'auto', 
+                        flexShrink: 0,
+                        padding: '4px 6px',
+                        gap: '4px'
+                      }}
+                    >
+                      <button
+                        onClick={() => setActiveInspectorTab('vessels')}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          backgroundColor: activeInspectorTab === 'vessels' ? '#1e293b' : 'transparent',
+                          color: activeInspectorTab === 'vessels' ? '#38bdf8' : '#94a3b8',
+                          fontWeight: activeInspectorTab === 'vessels' ? 700 : 500,
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          whiteSpace: 'nowrap',
+                          borderBottom: activeInspectorTab === 'vessels' ? '2px solid #38bdf8' : '2px solid transparent',
+                        }}
+                      >
+                        <Ship size={13} /> Vessels & Attribution ({currentIncident.candidateVessels.length})
+                      </button>
 
-              </div>
-            )
+                      <button
+                        onClick={() => setActiveInspectorTab('satellite')}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          backgroundColor: activeInspectorTab === 'satellite' ? '#1e293b' : 'transparent',
+                          color: activeInspectorTab === 'satellite' ? '#38bdf8' : '#94a3b8',
+                          fontWeight: activeInspectorTab === 'satellite' ? 700 : 500,
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          whiteSpace: 'nowrap',
+                          borderBottom: activeInspectorTab === 'satellite' ? '2px solid #38bdf8' : '2px solid transparent',
+                        }}
+                      >
+                        <Radar size={13} /> Satellite & Validation
+                      </button>
+
+                      <button
+                        onClick={() => setActiveInspectorTab('origin-drift')}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          backgroundColor: activeInspectorTab === 'origin-drift' ? '#1e293b' : 'transparent',
+                          color: activeInspectorTab === 'origin-drift' ? '#38bdf8' : '#94a3b8',
+                          fontWeight: activeInspectorTab === 'origin-drift' ? 700 : 500,
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          whiteSpace: 'nowrap',
+                          borderBottom: activeInspectorTab === 'origin-drift' ? '2px solid #38bdf8' : '2px solid transparent',
+                        }}
+                      >
+                        <RotateCcw size={13} /> Origin & Drift
+                      </button>
+
+                      <button
+                        onClick={() => setActiveInspectorTab('forensic-chain')}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          backgroundColor: activeInspectorTab === 'forensic-chain' ? '#1e293b' : 'transparent',
+                          color: activeInspectorTab === 'forensic-chain' ? '#38bdf8' : '#94a3b8',
+                          fontWeight: activeInspectorTab === 'forensic-chain' ? 700 : 500,
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          whiteSpace: 'nowrap',
+                          borderBottom: activeInspectorTab === 'forensic-chain' ? '2px solid #38bdf8' : '2px solid transparent',
+                        }}
+                      >
+                        <Network size={13} /> Evidence DAG
+                      </button>
+
+                      <button
+                        onClick={() => setActiveInspectorTab('provenance')}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          backgroundColor: activeInspectorTab === 'provenance' ? '#1e293b' : 'transparent',
+                          color: activeInspectorTab === 'provenance' ? '#38bdf8' : '#94a3b8',
+                          fontWeight: activeInspectorTab === 'provenance' ? 700 : 500,
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          whiteSpace: 'nowrap',
+                          borderBottom: activeInspectorTab === 'provenance' ? '2px solid #38bdf8' : '2px solid transparent',
+                        }}
+                      >
+                        <Clock size={13} /> Timeline & Audit
+                      </button>
+                    </div>
+
+                    {/* Inspector Panel Active View */}
+                    <div style={{ flex: 1, overflowY: 'auto' }}>
+                      {activeInspectorTab === 'vessels' && (
+                        <VesselsOfInterestPanel
+                          incident={currentIncident}
+                          selectedCandidateId={selectedCandidateId}
+                          onSelectCandidate={(id) => setSelectedCandidateId(id)}
+                          isCounterfactualOverlayActive={isCounterfactualOverlayActive}
+                          onToggleCounterfactualOverlay={(active) => setIsCounterfactualOverlayActive(active)}
+                          activeSimulationResult={activeSimulationResult}
+                          onSimulationResultChange={(result) => setActiveSimulationResult(result)}
+                          activeSimulationFrameIndex={activeSimulationFrameIndex}
+                          onSimulationFrameIndexChange={(frame) => setActiveSimulationFrameIndex(frame)}
+                          showSimulationParticles={showSimulationParticles}
+                          onToggleSimulationParticles={(show) => setShowSimulationParticles(show)}
+                        />
+                      )}
+                      {activeInspectorTab === 'satellite' && (
+                        <SatelliteObservationPanel incident={currentIncident} />
+                      )}
+                      {activeInspectorTab === 'origin-drift' && (
+                        <OriginDriftPanel incident={currentIncident} />
+                      )}
+                      {activeInspectorTab === 'forensic-chain' && (
+                        <ForensicEvidenceChainPanel incident={currentIncident} />
+                      )}
+                      {activeInspectorTab === 'provenance' && (
+                        <ProvenanceTimelinePanel incident={currentIncident} />
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
           ) : activeNavView === 'incidents' ? (
             <IncidentsListView onSelectIncident={(id) => handleSelectIncidentFromList(id)} />
           ) : activeNavView === 'vessels' ? (
@@ -760,8 +1270,12 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
             <KinematicCheckView incident={currentIncident} />
           ) : activeNavView === 'hotspots' ? (
             <HotspotsView />
+          ) : activeNavView === 'data-explorer' ? (
+            <DataExplorerView onSelectIncident={(id) => handleSelectIncidentFromList(id)} />
           ) : activeNavView === 'data-sources' ? (
             <DataSourcesView />
+          ) : activeNavView === 'data-integrity' ? (
+            <DataIntegrityView />
           ) : activeNavView === 'alerts' ? (
             <AlertFeed onSelectIncident={(id) => handleSelectIncidentFromList(id)} />
           ) : null}
@@ -782,6 +1296,11 @@ export const ConsoleWorkspace: React.FC<ConsoleWorkspaceProps> = ({
         incident={currentIncident}
         isOpen={isAuditDrawerOpen}
         onClose={() => setIsAuditDrawerOpen(false)}
+      />
+
+      <PipelineHealthModal
+        isOpen={isPipelineHealthOpen}
+        onClose={() => setIsPipelineHealthOpen(false)}
       />
 
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Incident } from '../../types';
 import { 
   Play, 
@@ -21,6 +21,14 @@ interface ForensicReplayViewProps {
 export const ForensicReplayView: React.FC<ForensicReplayViewProps> = ({ incident }) => {
   const [activeStep, setActiveStep] = useState(3);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % 8);
+    }, 1200);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   const steps = [
     { timeOffset: 'T - 12h', timeUtc: '02:32 UTC', event: 'Initial Background Metocean Forcing', candA: 35, candB: 30, candC: 28, note: 'Offshore southwesterly winds established at 14 kts' },

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Incident } from '../../types';
 import { regionalCoastlines } from '../../data/coastalBoundaries';
+import { SimulationResult } from '../../services/counterfactualSimulator';
 import L from 'leaflet';
 import { 
   Layers, 
@@ -24,6 +25,9 @@ interface InvestigationMapProps {
   onSelectCandidate: (candidateId: string) => void;
   replayTimeIndex?: number;
   showCounterfactualOverlay?: boolean;
+  simulationResult?: SimulationResult | null;
+  simulationFrameIndex?: number;
+  showParticles?: boolean;
 }
 
 export type MapVisualMode = 'spectral-plume' | 'satellite-noaa' | 'sar-osi' | 'ocean-bathymetry' | 'tactical-dark' | 'nautical-chart';
@@ -33,6 +37,9 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
   selectedCandidateId,
   onSelectCandidate,
   showCounterfactualOverlay = true,
+  simulationResult = null,
+  simulationFrameIndex = 5,
+  showParticles = true,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -40,8 +47,8 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
 
   // Active Map Visual Style
   const [visualMode, setVisualMode] = useState<MapVisualMode>('spectral-plume');
-  const [isLegendOpen, setIsLegendOpen] = useState(true);
-  const [isVesselHudOpen, setIsVesselHudOpen] = useState(true);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
+  const [isVesselHudOpen, setIsVesselHudOpen] = useState(false);
   const [showMirosModal, setShowMirosModal] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -57,6 +64,9 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
     depthM: number;
     nrcsDb: number;
   } | null>(null);
+
+  // Map Temporal Window Scrubber Offset (-24h, -12h, T0, +12h, +24h, +48h)
+  const [mapTimeOffset, setMapTimeOffset] = useState<number>(0);
 
   // Active Map Layer Toggles
   const [layersVisible, setLayersVisible] = useState({
@@ -1065,7 +1075,114 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
 
     // 16. COUNTERFACTUAL SIMULATION OVERLAY
     if (showCounterfactualOverlay && layersVisible.counterfactual) {
-      if (selectedCandidate?.counterfactualResult?.simulatedSlickGeoJson) {
+      if (simulationResult) {
+        const currentFrame =
+          simulationResult.frames[simulationFrameIndex] ||
+          simulationResult.frames[simulationResult.frames.length - 1];
+
+        if (currentFrame) {
+          // 16A. CPA Release Marker
+          const cpaIcon = L.divIcon({
+            html: `
+              <div style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 22px;
+                height: 22px;
+                background: rgba(15, 23, 42, 0.95);
+                border: 2px solid #00f5d4;
+                border-radius: 50%;
+                box-shadow: 0 0 10px rgba(0, 245, 212, 0.8);
+                color: #00f5d4;
+                font-size: 11px;
+                cursor: pointer;
+              ">
+                🎯
+              </div>
+            `,
+            className: 'custom-cpa-sim-marker',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+          });
+
+          L.marker(simulationResult.cpaCoordinates, { icon: cpaIcon })
+            .addTo(groups.counterfactual)
+            .bindTooltip(
+              `<div style="font-family:'IBM Plex Mono', monospace; font-size:11px; padding:4px;">
+                <strong style="color:#00f5d4;">CPA SIMULATION SEED POINT</strong><br/>
+                Vessel: ${simulationResult.candidateName}<br/>
+                Coordinates: ${simulationResult.cpaCoordinates[0].toFixed(3)}°N, ${simulationResult.cpaCoordinates[1].toFixed(3)}°E<br/>
+                Release Time: ${simulationResult.cpaTimeUtc}
+              </div>`,
+              { sticky: true }
+            );
+
+          // 16B. Advection Vector Trajectory from CPA to current centroid
+          L.polyline([simulationResult.cpaCoordinates, currentFrame.centroid], {
+            color: '#06b6d4',
+            weight: 2,
+            dashArray: '5, 5',
+            opacity: 0.8,
+          }).addTo(groups.counterfactual);
+
+          // 16C. Particle Swarm (high-performance synthetic Lagrangian particles)
+          if (showParticles && currentFrame.particles) {
+            currentFrame.particles.forEach((p) => {
+              L.circleMarker([p.lat, p.lng], {
+                radius: 2.2,
+                color: '#00f5d4',
+                fillColor: '#38bdf8',
+                fillOpacity: 0.8,
+                weight: 1,
+              }).addTo(groups.counterfactual);
+            });
+          }
+
+          // 16D. Plume Boundary Polygon
+          const simPoly = L.polygon(currentFrame.polygon, {
+            color: '#14b8a6',
+            weight: 2.2,
+            dashArray: '5, 5',
+            fillColor: '#06b6d4',
+            fillOpacity: 0.32,
+          }).addTo(groups.counterfactual);
+
+          simPoly.bindTooltip(
+            `<div style="font-family:'IBM Plex Mono', monospace; font-size:11px; padding:6px; min-width:210px;">
+              <strong style="color:#14b8a6;">🔬 IN-SILICO LAGRANGIAN SIMULATION</strong><br/>
+              Candidate: <strong>${simulationResult.candidateName}</strong><br/>
+              Simulation Step: <strong>${currentFrame.timestampUtc} (${currentFrame.timeOffsetHours}h elapsed)</strong><br/>
+              Particles Modeled: <strong>${simulationResult.params.particleCount.toLocaleString()}</strong><br/>
+              Net Advection: <strong>${simulationResult.totalDisplacementKm} km @ ${simulationResult.advectionDirectionDeg}°</strong><br/>
+              <hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin:4px 0;"/>
+              Spatial IoU Match: <strong style="color:#34d399;">${(simulationResult.spatialIoU * 100).toFixed(1)}%</strong><br/>
+              Hausdorff Distance: <strong>${simulationResult.hausdorffDistanceKm.toFixed(2)} km</strong><br/>
+              Centroid Offset: <strong>${simulationResult.centroidOffsetKm.toFixed(2)} km</strong><br/>
+              Verdict: <strong style="color:${simulationResult.verdict === 'HIGH_CONCORDANCE' ? '#34d399' : simulationResult.verdict === 'MARGINAL_INCONCLUSIVE' ? '#f59e0b' : '#ef4444'};">${simulationResult.verdictTitle}</strong>
+            </div>`,
+            { sticky: true }
+          );
+
+          // 16E. Spatial Intersection Zone (Observed Slick ∩ Simulated Plume)
+          if (
+            simulationResult.intersectionPoints &&
+            simulationResult.intersectionPoints.length > 0 &&
+            simulationFrameIndex >= simulationResult.frames.length - 1
+          ) {
+            simulationResult.intersectionPoints.forEach((pt) => {
+              L.circleMarker(pt, {
+                radius: 3.2,
+                color: '#22c55e',
+                fillColor: '#4ade80',
+                fillOpacity: 0.9,
+                weight: 1.2,
+              }).addTo(groups.counterfactual);
+            });
+          }
+        }
+      } else if (selectedCandidate?.counterfactualResult?.simulatedSlickGeoJson) {
+        // Fallback baseline static display
         const simLatlngs = selectedCandidate.counterfactualResult.simulatedSlickGeoJson.map(([lat, lng]) => [lat, lng] as [number, number]);
         
         const simPoly = L.polygon(simLatlngs, {
@@ -1095,6 +1212,9 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
     layersVisible,
     showCounterfactualOverlay,
     visualMode,
+    simulationResult,
+    simulationFrameIndex,
+    showParticles,
   ]);
 
   return (
@@ -1120,102 +1240,70 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
         }} 
       />
 
-      {/* TOP LEFT: MAP HEADING & SCIENTIFIC RECON HUD */}
+      {/* TOP LEFT: COMPACT INTEGRATED MAP TOOLBAR */}
       <div 
         style={{ 
           position: 'absolute', 
-          top: '12px', 
-          left: '12px', 
+          top: '10px', 
+          left: '10px', 
           zIndex: 10,
           display: 'flex',
-          flexDirection: 'column',
+          alignItems: 'center',
           gap: '8px',
-          maxWidth: 'calc(100% - 320px)'
+          backgroundColor: 'rgba(15, 23, 42, 0.92)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '6px',
+          padding: '4px 8px',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
         }}
       >
-        <div 
-          style={{ 
-            backgroundColor: 'rgba(15, 23, 42, 0.92)', 
-            backdropFilter: 'blur(10px)',
-            padding: '8px 14px', 
-            borderRadius: '6px', 
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            color: '#f8fafc'
+        <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#38bdf8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#38bdf8', display: 'inline-block' }}></span>
+          LAYER:
+        </span>
+        <select
+          value={visualMode}
+          onChange={(e) => setVisualMode(e.target.value as MapVisualMode)}
+          style={{
+            backgroundColor: '#1e293b',
+            color: '#f8fafc',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            padding: '3px 8px',
+            cursor: 'pointer',
+            outline: 'none',
           }}
         >
-          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#38bdf8', boxShadow: '0 0 8px #38bdf8' }}></div>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>{incident.region}</span>
-              <span 
-                style={{ 
-                  fontSize: '9px', 
-                  fontFamily: 'var(--font-mono)', 
-                  backgroundColor: visualMode === 'spectral-plume' ? 'rgba(234, 179, 8, 0.25)' : 'rgba(56, 189, 248, 0.25)', 
-                  color: visualMode === 'spectral-plume' ? '#fde047' : '#38bdf8',
-                  padding: '2px 6px',
-                  borderRadius: '3px',
-                  border: '1px solid rgba(255,255,255,0.2)'
-                }}
-              >
-                {visualMode.toUpperCase()}
-              </span>
-            </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
-              {incident.satelliteScene.satellite} • {incident.detectionTimeUtc} • SAR C-Band
-            </div>
-          </div>
-        </div>
+          <option value="spectral-plume">Spectral Plume (Multi-Tier)</option>
+          <option value="satellite-noaa">NOAA Satellite Mode</option>
+          <option value="sar-osi">SAR False-Color OSI</option>
+          <option value="ocean-bathymetry">Bathymetry / Relief</option>
+          <option value="tactical-dark">Tactical Dark</option>
+          <option value="nautical-chart">Vector Nautical Chart</option>
+        </select>
 
-        {/* VISUALIZATION MODE SWITCHER PILLS */}
-        <div 
-          style={{ 
-            backgroundColor: 'rgba(15, 23, 42, 0.90)', 
-            backdropFilter: 'blur(8px)',
-            padding: '4px 6px', 
-            borderRadius: '6px', 
-            border: '1px solid rgba(255, 255, 255, 0.12)',
+        <button
+          onClick={() => setIsLegendOpen(!isLegendOpen)}
+          className="btn btn-secondary btn-sm"
+          style={{
+            backgroundColor: isLegendOpen ? '#0284c7' : 'rgba(30, 41, 59, 0.9)',
+            color: isLegendOpen ? '#ffffff' : '#cbd5e1',
+            borderColor: 'rgba(255, 255, 255, 0.15)',
+            fontSize: '11px',
+            padding: '3px 8px',
+            minHeight: '26px',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
-            flexWrap: 'wrap'
+            gap: '5px'
           }}
+          title="Toggle Oil Thickness & Plume Legend"
         >
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#94a3b8', padding: '0 6px' }}>
-            MAP RECON:
-          </span>
-          {[
-            { id: 'spectral-plume', label: '🌈 Spectral Plume (Caspian/ResearchGate)' },
-            { id: 'satellite-noaa', label: '🛰️ NOAA Satellite (OR&R)' },
-            { id: 'sar-osi', label: '📡 SAR False-Color OSI' },
-            { id: 'ocean-bathymetry', label: '🌊 Bathymetry / Relief' },
-            { id: 'tactical-dark', label: '🗺️ Tactical Dark' },
-            { id: 'nautical-chart', label: '🧭 Vector Chart' },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setVisualMode(mode.id as MapVisualMode)}
-              style={{
-                backgroundColor: visualMode === mode.id ? '#0284c7' : 'transparent',
-                color: visualMode === mode.id ? '#ffffff' : '#cbd5e1',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '3px 8px',
-                fontSize: '11px',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: visualMode === mode.id ? 700 : 500,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
+          <Sparkles size={12} color={isLegendOpen ? '#ffffff' : '#38bdf8'} />
+          <span>Scale</span>
+        </button>
       </div>
 
       {/* TOP RIGHT: TOOLBAR CONTROLS */}
@@ -1458,45 +1546,49 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
       )}
 
       {/* BOTTOM RIGHT: FLOATING SCIENTIFIC COLORBAR & THICKNESS LEGEND */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '24px',
-          right: '14px',
-          zIndex: 10,
-          backgroundColor: 'rgba(15, 23, 42, 0.92)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          borderRadius: '6px',
-          padding: '12px 14px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-          fontSize: '11px',
-          fontFamily: 'var(--font-mono)',
-          color: '#f8fafc',
-          width: '270px',
-        }}
-      >
-        <div 
-          onClick={() => setIsLegendOpen(!isLegendOpen)}
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            cursor: 'pointer',
-            paddingBottom: isLegendOpen ? '8px' : '0',
-            borderBottom: isLegendOpen ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+      {isLegendOpen ? (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '24px',
+            right: '14px',
+            zIndex: 10,
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            borderRadius: '6px',
+            padding: '12px 14px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            color: '#f8fafc',
+            width: '270px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={14} color="#38bdf8" />
-            <span style={{ fontWeight: 700, letterSpacing: '0.02em', fontSize: '11px', color: '#38bdf8' }}>
-              OIL THICKNESS & PLUME INDEX
-            </span>
+          <div 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              paddingBottom: '8px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={14} color="#38bdf8" />
+              <span style={{ fontWeight: 700, letterSpacing: '0.02em', fontSize: '11px', color: '#38bdf8' }}>
+                OIL THICKNESS & PLUME INDEX
+              </span>
+            </div>
+            <button
+              onClick={() => setIsLegendOpen(false)}
+              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '12px', padding: '2px 4px' }}
+              title="Close Legend"
+            >
+              ✕
+            </button>
           </div>
-          {isLegendOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-        </div>
 
-        {isLegendOpen && (
           <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ fontSize: '10px', color: '#94a3b8' }}>
               Bonn Agreement / NOAA Surface Concentration Scale:
@@ -1547,55 +1639,78 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
               <span style={{ color: '#38bdf8' }}>C-SAR 10m Ground Pixel</span>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setIsLegendOpen(true)}
+          style={{
+            position: 'absolute',
+            bottom: '16px',
+            right: '14px',
+            zIndex: 10,
+            backgroundColor: 'rgba(15, 23, 42, 0.90)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '4px',
+            color: '#38bdf8',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '10.5px',
+            fontWeight: 600,
+            padding: '5px 10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          }}
+          title="Open Oil Thickness Scale"
+        >
+          <Sparkles size={12} color="#38bdf8" />
+          <span>Plume Scale Legend</span>
+        </button>
+      )}
 
-      {/* BOTTOM LEFT: DATA PROVENANCE KEY */}
+      {/* REAL-TIME TEMPORAL WINDOW SCRUBBER (Requirement 35) */}
       <div
         style={{
           position: 'absolute',
-          bottom: '24px',
-          left: '12px',
-          zIndex: 10,
-          backgroundColor: 'rgba(15, 23, 42, 0.90)',
+          bottom: cursorTelemetry ? '42px' : '14px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 15,
+          backgroundColor: 'rgba(15, 23, 42, 0.94)',
           backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          borderRadius: '6px',
-          padding: '8px 12px',
-          boxShadow: 'var(--shadow-sm)',
-          fontSize: '10px',
-          fontFamily: 'var(--font-mono)',
-          color: '#f8fafc',
+          border: '1px solid rgba(56, 189, 248, 0.3)',
+          borderRadius: '20px',
+          padding: '3px 8px',
           display: 'flex',
-          flexDirection: 'column',
+          alignItems: 'center',
           gap: '4px',
-          maxWidth: '240px'
+          boxShadow: '0 4px 16px rgba(0,0,0,0.6)'
         }}
       >
-        <div style={{ fontWeight: 700, color: '#38bdf8', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '3px', marginBottom: '2px', display: 'flex', justifyContent: 'space-between' }}>
-          <span>GEOSPATIAL PROVENANCE</span>
-          <span style={{ color: '#94a3b8' }}>STATUS</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#ef4444', display: 'inline-block' }}></span>
-          <span><strong style={{ color: '#f87171' }}>OBSERVED:</strong> Multi-Tier SAR Slick</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0284c7', display: 'inline-block' }}></span>
-          <span><strong style={{ color: '#38bdf8' }}>DERIVED:</strong> Origin Centroid</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '8px', border: '1px dashed #38bdf8', borderRadius: '2px', display: 'inline-block' }}></span>
-          <span><strong style={{ color: '#38bdf8' }}>UNCERTAIN:</strong> P50/80/95 Envelopes</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '2px', backgroundColor: '#f59e0b', display: 'inline-block' }}></span>
-          <span><strong style={{ color: '#fbbf24' }}>MODELLED:</strong> Hindcast / Forecast</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '2px', backgroundColor: '#38bdf8', display: 'inline-block' }}></span>
-          <span><strong style={{ color: '#38bdf8' }}>SYNTHETIC:</strong> AIS Vessel Tracks</span>
-        </div>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: '#94a3b8', paddingLeft: '4px' }}>
+          TIME WINDOW:
+        </span>
+        {[-24, -12, 0, 12, 24, 48].map((offset) => (
+          <button
+            key={offset}
+            onClick={() => setMapTimeOffset(offset)}
+            style={{
+              padding: '2px 8px',
+              borderRadius: '10px',
+              border: 'none',
+              fontSize: '10px',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: mapTimeOffset === offset ? 700 : 500,
+              backgroundColor: mapTimeOffset === offset ? '#0284c7' : 'transparent',
+              color: mapTimeOffset === offset ? '#ffffff' : '#cbd5e1',
+              cursor: 'pointer'
+            }}
+          >
+            {offset === 0 ? 'T0 (NOW)' : offset < 0 ? `${offset}h` : `+${offset}h`}
+          </button>
+        ))}
       </div>
 
       {/* BOTTOM CENTER: REAL-TIME CURSOR TELEMETRY HUD */}

@@ -137,17 +137,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterConsole }) => {
 
           {/* Header Action Button */}
           <button 
-            onClick={() => onEnterConsole('OS-042')}
+            onClick={() => onEnterConsole('OS-037')}
             className="btn btn-primary btn-sm"
             style={{ fontWeight: 600, padding: '7px 14px', flexShrink: 0 }}
           >
-            Launch Console <ArrowRight size={14} />
+            Open Command Console <ArrowRight size={14} />
           </button>
         </div>
       </header>
 
       {/* 3. HERO SECTION */}
-      <section style={{ position: 'relative', height: '620px', display: 'flex', alignItems: 'center', overflow: 'hidden', backgroundColor: '#0c1b29' }}>
+      <section style={{ position: 'relative', minHeight: '660px', display: 'flex', alignItems: 'center', overflow: 'hidden', backgroundColor: '#070d18' }}>
         <video
           autoPlay
           muted
@@ -161,76 +161,138 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterConsole }) => {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
+            objectPosition: 'center right',
             zIndex: 1,
             pointerEvents: 'none',
-            transform: 'translateX(-12.5%) scale(1.25)',
-            transformOrigin: 'center center',
+            opacity: 0.96,
           }}
         >
           <source src="/Ships.mp4" type="video/mp4" />
         </video>
 
-        {/* Foreground Content Card overlay (Swiss Grid Editorial style) */}
-        <div className="editorial-container" style={{ position: 'relative', zIndex: 2, width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+        {/* Soft Left-to-Right Vignette: Soft gradient preserving video visibility behind glassmorphic card */}
+        <div 
+          style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            background: 'linear-gradient(to right, rgba(7, 13, 24, 0.48) 0%, rgba(7, 13, 24, 0.25) 45%, transparent 75%)', 
+            zIndex: 2, 
+            pointerEvents: 'none' 
+          }} 
+        />
+
+        {/* Foreground Content Card overlay (Sleek Glassmorphic Maritime aesthetic) */}
+        <div className="editorial-container" style={{ position: 'relative', zIndex: 3, width: '100%', padding: '48px 0' }}>
           <div 
             style={{ 
-              maxWidth: '680px', 
-              backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-              backdropFilter: 'blur(16px)',
-              padding: '38px',
-              borderRadius: '6px',
-              border: '1px solid var(--border-strong)',
-              boxShadow: 'var(--shadow-xl)'
+              maxWidth: '620px', 
+              backgroundColor: 'rgba(10, 18, 36, 0.52)', 
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              padding: '32px 34px',
+              borderRadius: '8px',
+              border: '1px solid rgba(56, 189, 248, 0.28)',
+              boxShadow: '0 20px 50px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-              <span className="badge badge-blue">AQUATRACE</span>
-              <span className="badge badge-neutral">DECISION-SUPPORT PLATFORM</span>
+              <span className="badge badge-blue">SMART INDIA HACKATHON 2026 • PS-26143 (NTRO)</span>
+              <span className="badge badge-amber">DEMONSTRATION PLATFORM</span>
             </div>
 
-            <h1 style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1.18, color: 'var(--text-primary)', marginBottom: '14px' }}>
-              Explainable Maritime Oil Spill Traceback & Vessel Attribution
+            <h1 style={{ fontSize: '38px', fontWeight: 900, lineHeight: 1.15, color: '#f8fafc', marginBottom: '6px', letterSpacing: '-0.02em', textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
+              AquaTrace
             </h1>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#38bdf8', marginBottom: '16px', letterSpacing: '-0.01em', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+              Satellite-Powered Oil Spill Detection & Vessel Attribution
+            </h2>
 
-            <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '20px' }}>
-              Satellite intelligence for detecting maritime oil slicks, reconstructing likely release regions, correlating vessel activity, testing candidate hypotheses, and producing an auditable evidence chain under uncertainty.
+            <p style={{ fontSize: '15px', color: '#e2e8f0', lineHeight: 1.6, marginBottom: '22px', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
+              An intelligent maritime investigation platform combining SAR/EO imagery, oceanographic and meteorological data, drift modelling, and historical AIS analysis to trace oil spills back to their probable origin and identify vessels of interest.
             </p>
 
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '22px' }}>
-              Smart India Hackathon 2026 · SIH26143 · NTRO · Disaster Management · Team Code Blooded
+            {/* Central 6-Stage Visual Workflow Banner (Section 1) */}
+            <div 
+              style={{ 
+                backgroundColor: 'rgba(7, 12, 22, 0.52)', 
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                border: '1px solid rgba(56, 189, 248, 0.2)', 
+                borderRadius: '4px', 
+                padding: '10px 14px', 
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '6px',
+                fontSize: '11px',
+                fontFamily: 'var(--font-mono)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#38bdf8', fontWeight: 700 }}>
+                <span>01</span> DETECT
+              </div>
+              <span style={{ color: '#64748b' }}>→</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#38bdf8', fontWeight: 700 }}>
+                <span>02</span> CHARACTERISE
+              </div>
+              <span style={{ color: '#64748b' }}>→</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#38bdf8', fontWeight: 700 }}>
+                <span>03</span> HINDCAST
+              </div>
+              <span style={{ color: '#64748b' }}>→</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#38bdf8', fontWeight: 700 }}>
+                <span>04</span> AIS CORRELATION
+              </div>
+              <span style={{ color: '#64748b' }}>→</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f59e0b', fontWeight: 700 }}>
+                <span>05</span> ATTRIBUTION
+              </div>
+              <span style={{ color: '#64748b' }}>→</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#34d399', fontWeight: 700 }}>
+                <span>06</span> FORECAST
+              </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', marginBottom: '24px' }}>
               <button 
-                onClick={() => onEnterConsole('OS-042')}
+                onClick={() => onEnterConsole('OS-037')}
                 className="btn btn-primary btn-lg"
-                style={{ fontWeight: 600 }}
+                style={{ fontWeight: 700, letterSpacing: '0.02em', padding: '12px 24px', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)' }}
               >
-                Launch Investigator Console <ArrowRight size={18} />
+                OPEN COMMAND CONSOLE <ArrowRight size={18} />
               </button>
               
-              <a 
-                href="#workflow" 
+              <button 
+                onClick={() => onEnterConsole('OS-037')}
                 className="btn btn-secondary btn-lg"
-                style={{ fontWeight: 500 }}
+                style={{
+                  fontWeight: 600,
+                  backgroundColor: 'rgba(15, 23, 42, 0.45)',
+                  backdropFilter: 'blur(8px)',
+                  color: '#f8fafc',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  padding: '12px 20px'
+                }}
               >
-                Explore 9-Stage Workflow
-              </a>
+                EXPLORE INVESTIGATION (OS-037)
+              </button>
             </div>
 
             {/* Quick Metrics Bar */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', borderTop: '1px solid rgba(255, 255, 255, 0.12)', paddingTop: '16px' }}>
               <div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>SENSOR SENSITIVITY</div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>10m SAR C-Band</div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'var(--font-mono)' }}>SAR RESOLUTION</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#f8fafc' }}>10m–12.5m C-Band</div>
               </div>
               <div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>MODELLED UNCERTAINTY</div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>P50 / P80 / P95 Envelopes</div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'var(--font-mono)' }}>PROBABILISTIC ORIGIN</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#38bdf8' }}>P50 / P80 / P95 Envelopes</div>
               </div>
               <div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>DECISION INTEGRITY</div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--accent-teal)' }}>Principled Abstention</div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'var(--font-mono)' }}>EVIDENTIARY GOVERNANCE</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#34d399' }}>Principled Abstention</div>
               </div>
             </div>
           </div>

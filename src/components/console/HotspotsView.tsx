@@ -95,6 +95,8 @@ export const HotspotsView: React.FC = () => {
     const markersGroup = markersGroupRef.current;
     if (!map || !markersGroup) return;
 
+    markersGroup.clearLayers();
+
     // Render hotspot markers
     mockHotspots.forEach((hs) => {
       const isSelected = hs.id === selectedHotspotId;
