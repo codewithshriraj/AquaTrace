@@ -3,15 +3,14 @@ import { mockIncidents } from '../../data/mockIncidents';
 import { regionalCoastlines } from '../../data/coastalBoundaries';
 import { Incident } from '../../types';
 import L from 'leaflet';
-import { CARTO_BASEMAPS } from '../../services/map/cartoConfig';
-import { 
-  ShieldAlert, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Compass, 
-  MapPin, 
-  Ship, 
-  Layers, 
+import {
+  ShieldAlert,
+  CheckCircle2,
+  AlertTriangle,
+  Compass,
+  MapPin,
+  Ship,
+  Layers,
   ArrowRight,
   Radar,
   Radio,
@@ -61,17 +60,23 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onSelectIn
       });
 
       // Professional dark maritime carto basemap
-      L.tileLayer(CARTO_BASEMAPS.voyagerNoLabels, {
-        subdomains: 'abcd',
-        maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
+        {
+          subdomains: 'abcd',
+          maxZoom: 19,
+        }
+      ).addTo(map);
 
       // Add labels overlay
-      L.tileLayer(CARTO_BASEMAPS.voyagerOnlyLabels, {
-        subdomains: 'abcd',
-        maxZoom: 19,
-        opacity: 0.7,
-      }).addTo(map);
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+        {
+          subdomains: 'abcd',
+          maxZoom: 19,
+          opacity: 0.7,
+        }
+      ).addTo(map);
 
       // Render regional coastline boundary paths
       regionalCoastlines.forEach((coast) => {
@@ -222,12 +227,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onSelectIn
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-body)', overflow: 'hidden' }}>
-      
+
       {/* 1. TOP OPERATIONAL KPI CARDS BAR (SECTION 4) */}
-      <div 
-        style={{ 
-          padding: '16px 20px', 
-          backgroundColor: '#0f172a', 
+      <div
+        style={{
+          padding: '16px 20px',
+          backgroundColor: '#0f172a',
           borderBottom: '1px solid #1e293b',
           color: '#ffffff',
           flexShrink: 0
@@ -311,21 +316,21 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onSelectIn
 
       {/* 2. MAIN SPLIT: LARGE PRIMARY MAP (LEFT) + INCIDENTS LIST (RIGHT) */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 380px', overflow: 'hidden' }}>
-        
+
         {/* Large Primary Map (Section 4) */}
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
 
           {/* Map Cartographic Legend Overlay */}
-          <div 
-            style={{ 
-              position: 'absolute', 
-              bottom: '16px', 
-              left: '16px', 
-              backgroundColor: 'rgba(15, 23, 42, 0.92)', 
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '16px',
+              left: '16px',
+              backgroundColor: 'rgba(15, 23, 42, 0.92)',
               backdropFilter: 'blur(8px)',
-              padding: '10px 14px', 
-              borderRadius: '6px', 
+              padding: '10px 14px',
+              borderRadius: '6px',
               border: '1px solid #334155',
               color: '#ffffff',
               fontSize: '11px',
@@ -397,14 +402,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onSelectIn
                       )}
                     </div>
 
-                    <span 
-                      className={`badge ${
-                        isInconclusive 
-                          ? 'badge-red' 
-                          : isHigh 
-                          ? 'badge-blue' 
-                          : 'badge-amber'
-                      }`}
+                    <span
+                      className={`badge ${isInconclusive
+                          ? 'badge-red'
+                          : isHigh
+                            ? 'badge-blue'
+                            : 'badge-amber'
+                        }`}
                       style={{ fontSize: '9px' }}
                     >
                       {inc.status}

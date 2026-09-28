@@ -61,7 +61,8 @@ def apply_enhanced_lee_filter(img_linear: np.ndarray, window_size: int = 5, damp
 
 class SARPreprocessor:
     def __init__(self, calibration_lut_constant: float = 1.0):
-        self.cal_constant = calibration_lut_constant
+        # Scale factor to convert DN to sigma0 linear units (default for Sentinel-1 GRD)
+        self.cal_constant = calibration_lut_constant if calibration_lut_constant != 1.0 else 0.0001
 
     def process_grd_raster(
         self,
@@ -79,7 +80,8 @@ class SARPreprocessor:
             raise ValueError("SAR raster contains zero valid non-zero pixels.")
 
         # 1. Radiometric calibration: sigma0 = DN^2 / A^2
-        sigma0_linear = (dn_matrix.astype(np.float32) ** 2) / (self.cal_constant ** 2)
+        # Apply radiometric calibration: sigma0_linear = (DN * scale)^2
+        sigma0_linear = (dn_matrix.astype(np.float32) * self.cal_constant) ** 2
         sigma0_linear[~valid_mask] = 1e-7
 
         # 2. Speckle Reduction via Enhanced Lee Filter
@@ -94,7 +96,8 @@ class SARPreprocessor:
         vh_sigma0_db = None
         vv_vh_ratio_db = None
         if vh_dn_matrix is not None and vh_dn_matrix.shape == dn_matrix.shape:
-            vh_linear = (vh_dn_matrix.astype(np.float32) ** 2) / (self.cal_constant ** 2)
+            # Apply same scaling for VH polarization
+            vh_linear = (vh_dn_matrix.astype(np.float32) * self.cal_constant) ** 2
             vh_filtered = apply_enhanced_lee_filter(vh_linear, window_size=window_size)
             vh_sigma0_db = 10.0 * np.log10(np.maximum(vh_filtered, 1e-7))
             vh_sigma0_db[~valid_mask] = -40.0

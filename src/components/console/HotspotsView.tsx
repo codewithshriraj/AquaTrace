@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { mockHotspots } from '../../data/mockIncidents';
 import L from 'leaflet';
-import { CARTO_BASEMAPS } from '../../services/map/cartoConfig';
 import { MapPin, AlertTriangle, ShieldAlert, TrendingUp, Layers, RotateCcw, Compass } from 'lucide-react';
 
 export const HotspotsView: React.FC = () => {
@@ -29,13 +28,6 @@ export const HotspotsView: React.FC = () => {
       // High-res satellite imagery basemap
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 18,
-      }).addTo(map);
-
-      // CARTO Dark Matter labels overlay for clear maritime geography & ports
-      L.tileLayer(CARTO_BASEMAPS.darkMatterOnlyLabels, {
-        subdomains: 'abcd',
-        maxZoom: 18,
-        opacity: 0.85,
       }).addTo(map);
 
       // Layer group for hotspots and shipping corridors
@@ -188,7 +180,7 @@ export const HotspotsView: React.FC = () => {
   return (
     <div style={{ height: '100%', overflowY: 'auto', padding: '24px', backgroundColor: 'var(--bg-body)' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        
+
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div>
@@ -209,11 +201,11 @@ export const HotspotsView: React.FC = () => {
         </div>
 
         {/* INTERACTIVE GLOBAL / REGIONAL CORRIDOR MAP (Satellite Basemap + Hotspots + Shipping Lanes) */}
-        <div 
-          className="gis-panel" 
-          style={{ 
-            height: '380px', 
-            position: 'relative', 
+        <div
+          className="gis-panel"
+          style={{
+            height: '380px',
+            position: 'relative',
             overflow: 'hidden',
             borderRadius: '8px',
             border: '1px solid var(--border-strong)',
@@ -224,11 +216,11 @@ export const HotspotsView: React.FC = () => {
           <div ref={mapContainerRef} style={{ width: '100%', height: '100%', zIndex: 1 }} />
 
           {/* Map Overlay Badge */}
-          <div 
-            style={{ 
-              position: 'absolute', 
-              top: '12px', 
-              left: '12px', 
+          <div
+            style={{
+              position: 'absolute',
+              top: '12px',
+              left: '12px',
               zIndex: 10,
               backgroundColor: 'rgba(15, 23, 42, 0.92)',
               backdropFilter: 'blur(8px)',
@@ -294,7 +286,7 @@ export const HotspotsView: React.FC = () => {
                   <span className="badge badge-neutral" style={{ fontSize: '10px' }}>
                     LAT {hs.lat}°N, LON {hs.lng}°E
                   </span>
-                  <span 
+                  <span
                     className={`badge ${isCritical ? 'badge-red' : 'badge-amber'}`}
                     style={{ fontSize: '10px' }}
                   >

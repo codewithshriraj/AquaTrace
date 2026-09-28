@@ -3,17 +3,16 @@ import { Incident } from '../../types';
 import { regionalCoastlines } from '../../data/coastalBoundaries';
 import { SimulationResult } from '../../services/counterfactualSimulator';
 import L from 'leaflet';
-import { CARTO_BASEMAPS } from '../../services/map/cartoConfig';
-import { 
-  Layers, 
-  RotateCcw, 
-  Compass, 
-  Maximize2, 
+import {
+  Layers,
+  RotateCcw,
+  Compass,
+  Maximize2,
   Minimize2,
-  ChevronDown, 
-  ChevronUp, 
-  Sparkles, 
-  Ship, 
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Ship,
   Activity,
   Crosshair,
   Ruler,
@@ -283,8 +282,13 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
 
     baseGroup.clearLayers();
 
-    if (mapContainerRef.current) {
-      mapContainerRef.current.style.backgroundColor = '#0b1622';
+    if (visualMode === 'nautical-chart') {
+      if (mapContainerRef.current) {
+        mapContainerRef.current.style.backgroundColor = '#0b1622';
+        mapContainerRef.current.style.backgroundImage = 'radial-gradient(#1e3a5f 1px, transparent 1px)';
+        mapContainerRef.current.style.backgroundSize = '32px 32px';
+      }
+      return;
     }
 
     let tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -292,13 +296,8 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
     let subdomains = 'abc';
 
     if (visualMode === 'tactical-dark') {
-      tileUrl = CARTO_BASEMAPS.darkMatter;
+      tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
       maxZoom = 19;
-      subdomains = 'abcd';
-    } else if (visualMode === 'nautical-chart') {
-      tileUrl = CARTO_BASEMAPS.voyager;
-      maxZoom = 19;
-      subdomains = 'abcd';
     } else if (visualMode === 'ocean-bathymetry') {
       tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}';
       maxZoom = 13;
@@ -329,7 +328,7 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
   // Helper to generate concentric offset polygons for scientific multi-tier plume gradients
   const generateConcentricRings = (points: [number, number][], apexCentroid: [number, number]) => {
     if (points.length < 3) return [];
-    
+
     let sumLat = 0;
     let sumLng = 0;
     points.forEach(([lat, lng]) => {
@@ -612,7 +611,7 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
     // 8. HINDCAST BACKWARD TRAJECTORY
     if (layersVisible.hindcast && incident.hindcastTrajectory.length > 0) {
       const latlngs = incident.hindcastTrajectory.map((p) => [p.lat, p.lng] as [number, number]);
-      
+
       const hindcastLine = L.polyline(latlngs, {
         color: '#38bdf8',
         weight: 3.2,
@@ -811,17 +810,17 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
       incident.candidateVessels.forEach((cand) => {
         const isSelected = cand.id === selectedCandidateId;
         const isHigh = cand.correlationTier === 'HIGH CORRELATION';
-        
-        const trackColor = isSelected 
-          ? '#ef4444' 
-          : isHigh 
-          ? '#38bdf8' 
-          : '#64748b';
+
+        const trackColor = isSelected
+          ? '#ef4444'
+          : isHigh
+            ? '#38bdf8'
+            : '#64748b';
 
         // Draw Full Vessel Track Line
         if (cand.track.length > 1) {
           const latlngs = cand.track.map((t) => [t.lat, t.lng] as [number, number]);
-          
+
           const trackPoly = L.polyline(latlngs, {
             color: trackColor,
             weight: isSelected ? 3.8 : 2.2,
@@ -835,7 +834,7 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
           if (layersVisible.waypointTimestamps && (isSelected || isHigh)) {
             cand.track.forEach((wp) => {
               const isCpaPoint = wp.speedKnots < 10.0;
-              
+
               L.circleMarker([wp.lat, wp.lng], {
                 radius: isCpaPoint ? 6 : 3.5,
                 color: isCpaPoint ? '#ef4444' : '#ffffff',
@@ -1185,7 +1184,7 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
       } else if (selectedCandidate?.counterfactualResult?.simulatedSlickGeoJson) {
         // Fallback baseline static display
         const simLatlngs = selectedCandidate.counterfactualResult.simulatedSlickGeoJson.map(([lat, lng]) => [lat, lng] as [number, number]);
-        
+
         const simPoly = L.polygon(simLatlngs, {
           color: '#14b8a6',
           weight: 2.2,
@@ -1219,34 +1218,34 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
   ]);
 
   return (
-    <div 
-      style={{ 
-        position: isFullscreen ? 'fixed' : 'relative', 
+    <div
+      style={{
+        position: isFullscreen ? 'fixed' : 'relative',
         inset: isFullscreen ? 0 : 'auto',
-        width: '100%', 
-        height: '100%', 
+        width: '100%',
+        height: '100%',
         overflow: 'hidden',
         zIndex: isFullscreen ? 9999 : 1,
         backgroundColor: '#0b1622'
       }}
     >
       {/* MAP CANVAS */}
-      <div 
-        ref={mapContainerRef} 
-        style={{ 
-          width: '100%', 
-          height: '100%', 
+      <div
+        ref={mapContainerRef}
+        style={{
+          width: '100%',
+          height: '100%',
           zIndex: 1,
           cursor: isMeasuring ? 'crosshair' : 'grab'
-        }} 
+        }}
       />
 
       {/* TOP LEFT: COMPACT INTEGRATED MAP TOOLBAR */}
-      <div 
-        style={{ 
-          position: 'absolute', 
-          top: '10px', 
-          left: '10px', 
+      <div
+        style={{
+          position: 'absolute',
+          top: '10px',
+          left: '10px',
           zIndex: 10,
           display: 'flex',
           alignItems: 'center',
@@ -1308,11 +1307,11 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
       </div>
 
       {/* TOP RIGHT: TOOLBAR CONTROLS */}
-      <div 
-        style={{ 
-          position: 'absolute', 
-          top: '12px', 
-          right: '54px', 
+      <div
+        style={{
+          position: 'absolute',
+          top: '12px',
+          right: '54px',
           zIndex: 10,
           display: 'flex',
           alignItems: 'center',
@@ -1416,20 +1415,20 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
 
         {/* Layers Dropdown Menu */}
         {showLayerMenu && (
-          <div 
-            style={{ 
-              position: 'absolute', 
-              top: '40px', 
-              right: 0, 
-              width: '290px', 
-              backgroundColor: '#0f172a', 
+          <div
+            style={{
+              position: 'absolute',
+              top: '40px',
+              right: 0,
+              width: '290px',
+              backgroundColor: '#0f172a',
               border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: '6px', 
+              borderRadius: '6px',
               boxShadow: 'var(--shadow-xl)',
-              padding: '14px', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '8px', 
+              padding: '14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
               zIndex: 30,
               color: '#f8fafc',
               maxHeight: '80vh',
@@ -1464,15 +1463,15 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
             ].map(({ key, label }) => {
               const active = layersVisible[key as keyof typeof layersVisible];
               return (
-                <label 
+                <label
                   key={key}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    fontSize: '12px', 
-                    color: '#e2e8f0', 
-                    cursor: 'pointer' 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '12px',
+                    color: '#e2e8f0',
+                    cursor: 'pointer'
                   }}
                 >
                   <span>{label}</span>
@@ -1566,11 +1565,11 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
             width: '270px',
           }}
         >
-          <div 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
               paddingBottom: '8px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
             }}
@@ -1596,17 +1595,17 @@ export const InvestigationMap: React.FC<InvestigationMapProps> = ({
             </div>
 
             <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>
-              <div 
-                style={{ 
-                  width: '14px', 
+              <div
+                style={{
+                  width: '14px',
                   borderRadius: '3px',
                   background: visualMode === 'satellite-noaa'
                     ? 'linear-gradient(to bottom, #1e1b4b, #1d4ed8, #2563eb, #0284c7, #22d3ee)'
                     : visualMode === 'sar-osi'
-                    ? 'linear-gradient(to bottom, #020617, #040711, #090d16, #0f172a, #38bdf8)'
-                    : visualMode === 'ocean-bathymetry'
-                    ? 'linear-gradient(to bottom, #7f1d1d, #c2410c, #ca8a04, #15803d, #0369a1)'
-                    : 'linear-gradient(to bottom, #dc2626, #f97316, #eab308, #10b981, #0284c7)',
+                      ? 'linear-gradient(to bottom, #020617, #040711, #090d16, #0f172a, #38bdf8)'
+                      : visualMode === 'ocean-bathymetry'
+                        ? 'linear-gradient(to bottom, #7f1d1d, #c2410c, #ca8a04, #15803d, #0369a1)'
+                        : 'linear-gradient(to bottom, #dc2626, #f97316, #eab308, #10b981, #0284c7)',
                   border: '1px solid rgba(255,255,255,0.2)'
                 }}
               />
